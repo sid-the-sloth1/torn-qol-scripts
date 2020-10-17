@@ -12,11 +12,12 @@
     'use strict';
     function alert(id, name, room, str) {
         var lastSeen = localStorage.getItem("turdTime");
+        var last;
         if (typeof lastSeen == "undefined" || lastSeen == null) {
-            var last = {"bitches": {}};
+            last = {"bitches": {}};
             localStorage.setItem("turdTime", JSON.stringify(last));
         } else {
-            var last = JSON.parse(lastSeen);
+            last = JSON.parse(lastSeen);
             if (last["bitches"][id]) {
                 if (Date.now()/1000 - last["bitches"][id] < 500) {
                     return;
