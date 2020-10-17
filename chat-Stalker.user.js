@@ -10,6 +10,9 @@
  
 (function() {
     'use strict';
+    //add user IDs of people you want to stalk. both chats have their own seperate list. By default me and Chedburn are added to both lists
+    let globalTargets = ["2131687", "1"];
+    let tradeTargets = ["2131687", "1"];
     function alert(id, name, room, str) {
         var lastSeen = localStorage.getItem("turdTime");
         var last;
@@ -29,10 +32,6 @@
         last["bitches"][id] = Date.now()/1000;
         localStorage.setItem("turdTime", JSON.stringify(last));
     }
-    
-    //add user IDs of people you want to stalk. both chats have their own seperate list. By default me and Chedburn are added to both lists
-    let globalTargets = ["2131687", "1"];
-    let tradeTargets = ["2131687", "1"];
     let chatCode = document.querySelector('script[src^="/js/chat/chat."]');
     let secret = chatCode.getAttribute("secret");
     let uid = chatCode.getAttribute("uid");
@@ -51,7 +50,6 @@
             document.querySelector(".penny_modal").remove();
         }
     });
- 
     GM_addStyle(`
         .penny_modal { border-radius: 8px; background-color: rgb(242, 242, 242); animation: animate 3s linear infinite;}
 		@keyframes animate { 0% { box-shadow: 0 0 0 0 rgba(255,109,74,.7), 0 0 0 0 rgba(255,109,74,.7);} 40% { box-shadow: 0 0 0 50px rgba(255,109,74,0), 0 0 0 0 rgba(255,109,74,.7);} 80% { box-shadow: 0 0 0 50px rgba(255,109,74,0), 0 0 0 0 rgba(255,109,74,0);} 100% { box-shadow: 0 0 0 0 rgba(255,109,74,0), 0 0 0 0 rgba(255,109,74,0);} }
