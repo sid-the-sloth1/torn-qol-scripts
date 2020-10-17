@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Attack Option Hider
+// @name         After Attack Option Hider
 // @namespace    hardy.attackoptionhider
 // @version      1.0
 // @description  Hides options as per requirement after winning an attack.
