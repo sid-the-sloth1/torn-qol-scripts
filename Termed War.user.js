@@ -1,24 +1,43 @@
 // ==UserScript==
-// @name         Termed War (Work in  Progress)
-// @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  try to take over the world!
-// @author       You
+// @name         Termed War (Work in Progress)
+// @namespace    hardy.termed.war
+// @version      1.0
+// @description  Hides options as per requirement after winning an attack.
+// @author       Hardy[2131687]
 // @match        https://www.torn.com/loader.php?sid=attack*
 // ==/UserScript==
+
+/*
+To help people to not choose wrong option after winning an attack. 
+Especially mobile players with fat fingers like me.
+ 
+ Use cases:
+ 1) Termed Wars where you can't hospitalise or mug the opponent.
+ 2) While doing missions when you are given specific instructions.
+ 3) If you are a mugger.
+ 4) Any other situation where you don't want to accidentally leave or hosp or mug.
+ 
+ 
+ How to use:
+ Before opening the attack page, set the options in lines 33 to 35 to:
+ true, if you want that option to be visible
+ false, if you want to make the option invisible.
+ 
+ Incase you forgot to change the settings before the attack there will be a "Show All" option to show all the options.
+ */
+
 
 (function() {
     'use strict';
 
-    let mug = false;
-    let hosp = false;
-    let leave = true;
+    let mug = true;// true or false
+    let hosp = true;// true or false
+    let leave = true;//true or false
 
     let storage = {};
     storage.button = 0;
 
     const config = {attributes: true, childList: true, subtree: true };
-
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
             if (document.querySelectorAll('div[class^="dialogButtons"]').length > 0) {
@@ -28,6 +47,7 @@
     })
     var cd = setInterval(checkForElement,
                          1000);
+                         
     function checkForElement() {
         if (document.querySelectorAll('div[class^="playerArea"]').length > 0) {
             clearInterval(cd);
@@ -80,7 +100,6 @@
                 node.removeAttribute("style");
             }
             optionsDialogBox.querySelector("#hardy_termed_war_show_option").remove();
-            console.log("bitch");
         }
     });
 })();
