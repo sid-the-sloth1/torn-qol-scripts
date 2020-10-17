@@ -10,33 +10,30 @@
 /*
 To help people to not choose wrong option after winning an attack. 
 Especially mobile players with fat fingers like me.
- 
+ *
  Use cases:
  1) Termed Wars where you can't hospitalise or mug the opponent.
  2) While doing missions when you are given specific instructions.
  3) If you are a mugger.
  4) Any other situation where you don't want to accidentally leave or hosp or mug.
- 
- 
+ *
+ *
  How to use:
  Before opening the attack page, set the options in lines 33 to 35 to:
  true, if you want that option to be visible
  false, if you want to make the option invisible.
- 
+ *
  Incase you forgot to change the settings before the attack there will be a "Show All" option to show all the options.
  */
 
 
 (function() {
     'use strict';
-
     let mug = true;// true or false
     let hosp = true;// true or false
     let leave = true;//true or false
-
     let storage = {};
     storage.button = 0;
-
     const config = {attributes: true, childList: true, subtree: true };
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
@@ -47,7 +44,7 @@ Especially mobile players with fat fingers like me.
     })
     var cd = setInterval(checkForElement,
                          1000);
-                         
+  
     function checkForElement() {
         if (document.querySelectorAll('div[class^="playerArea"]').length > 0) {
             clearInterval(cd);
@@ -55,7 +52,6 @@ Especially mobile players with fat fingers like me.
             observer.observe(wrapper, config);
         }
     }
-
     function disconnect() {
         if (!storage.index) {
             observer.disconnect();
@@ -79,7 +75,6 @@ Especially mobile players with fat fingers like me.
                 option.setAttribute("style", "display:none");
                 disconnect();
             }
-
             if (!mug || !hosp || !leave) {
                 if (text == "leave" && storage.button == 0) {
                     let showOptionsButton = document.createElement("button");
