@@ -13,7 +13,7 @@
     //add user IDs of people you want to stalk. both chats have their own seperate list. By default me and Chedburn are added to both lists
     let globalTargets = ["2131687", "1"];
     let tradeTargets = ["2131687", "1"];
-    function alert(id, name, room, str) {
+    function pAlert(id, name, room, str) {
         var lastSeen = localStorage.getItem("turdTime");
         var last;
         if (typeof lastSeen == "undefined" || lastSeen == null) {
@@ -40,9 +40,9 @@
         let data = JSON.parse(event.data)["data"][0];
         //console.log(data);
         if (data.roomId == "Trade" && tradeTargets.indexOf(data.senderId) !== -1) {
-            alert(data.senderId, data.senderName, 'Trade', data.messageText);
+            pAlert(data.senderId, data.senderName, 'Trade', data.messageText);
         } else if (data.roomId == "Global" && globalTargets.indexOf(data.senderId) !== -1) {
-            alert(data.senderId, data.senderName, 'Global', data.messageText);
+            pAlert(data.senderId, data.senderName, 'Global', data.messageText);
         }
     };
     document.addEventListener("click", function(e) {
