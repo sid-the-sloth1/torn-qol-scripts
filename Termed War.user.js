@@ -7,6 +7,7 @@
 // @match        https://www.torn.com/loader.php?sid=attack*
 // ==/UserScript==
 /*
+It hides options after winning an attack as per requirement.
 To help people to not choose wrong option after winning an attack. 
 Especially mobile players with fat fingers like me.
  *
