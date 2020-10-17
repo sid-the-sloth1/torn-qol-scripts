@@ -6,7 +6,6 @@
 // @author       Hardy[2131687]
 // @match        https://www.torn.com/loader.php?sid=attack*
 // ==/UserScript==
-
 /*
 To help people to not choose wrong option after winning an attack. 
 Especially mobile players with fat fingers like me.
@@ -25,10 +24,9 @@ Especially mobile players with fat fingers like me.
  *
  Incase you forgot to change the settings before the attack there will be a "Show All" option to show all the options.
  */
-
-
 (function() {
     'use strict';
+    // true to show & false to hide
     let mug = true;// true or false
     let hosp = true;// true or false
     let leave = true;//true or false
@@ -52,7 +50,7 @@ Especially mobile players with fat fingers like me.
             observer.observe(wrapper, config);
         }
     }
-    function disconnect() {
+    function disconnectObserver() {
         if (!storage.index) {
             observer.disconnect();
             storage.index = 69;
@@ -67,13 +65,13 @@ Especially mobile players with fat fingers like me.
             let text = option.innerText.toLowerCase();
             if (!mug && text === "mug") {
                 option.setAttribute("style", "display:none");
-                disconnect();
+                disconnectObserver();
             } else if (!hosp && text === "hosp") {
                 option.setAttribute("style", "display:none");
-                disconnect();
+                disconnectObserver();
             } else if (!leave && text === "leave") {
                 option.setAttribute("style", "display:none");
-                disconnect();
+                disconnectObserver();
             }
             if (!mug || !hosp || !leave) {
                 if (text == "leave" && storage.button == 0) {
