@@ -28,7 +28,7 @@
             }
         }
     }
-    const config = { attributes: true, childList: true, subtree: true };
+    const config = {attributes: true, childList: true, subtree: true };
  
     const observer = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
