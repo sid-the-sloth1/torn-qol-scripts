@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Termed War (Work in Progress)
-// @namespace    hardy.termed.war
+// @name         Attack Option Hider
+// @namespace    hardy.attackoptionhider
 // @version      1.0
 // @description  Hides options as per requirement after winning an attack.
 // @author       Hardy[2131687]
@@ -42,7 +42,6 @@ Especially mobile players with fat fingers like me.
     })
     var cd = setInterval(checkForElement,
                          1000);
-  
     function checkForElement() {
         if (document.querySelectorAll('div[class^="playerArea"]').length > 0) {
             clearInterval(cd);
