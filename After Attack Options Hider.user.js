@@ -19,7 +19,8 @@ Especially mobile players with fat fingers like me.
  *
  *
  How to use:
- Before opening the attack page, set the options in lines 31 to 33 to:
+ By default all options will be visible
+ Before opening the attack page, set the options in lines 32 to 34 to:
  true, if you want that option to be visible
  false, if you want to make the option invisible.
  *
