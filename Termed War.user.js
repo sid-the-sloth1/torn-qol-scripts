@@ -42,7 +42,6 @@ Especially mobile players with fat fingers like me.
     })
     var cd = setInterval(checkForElement,
                          1000);
-  
     function checkForElement() {
         if (document.querySelectorAll('div[class^="playerArea"]').length > 0) {
             clearInterval(cd);
