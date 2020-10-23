@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Auction Countdown Timer for Mobile
 // @namespace    hardy.auction.timer
-// @version      1.0
+// @version      1.1
 // @description  Display Countdown timer on Auction page for mobile.
-// @author       Hardy
+// @author       Hardy[2131687]
 // @match        https://www.torn.com/amarket.php*
 // @grant        GM_addStyle
 // ==/UserScript==
@@ -28,10 +28,8 @@
             var seconds = Math.floor((distance % (1000 * 60)) / 1000);
             ul[t].querySelector(".item-cont-wrap .title .t-gray-6").innerText = days + "d " + hours + "h "+ minutes + "m " + seconds + "s ";
             if (distance < 0) {
-                clearInterval(countdown);
                 ul[t].querySelector(".item-cont-wrap .title .t-gray-6").innerText = "Expired";
             }
-            //console.log(now);
         }
     }
     
