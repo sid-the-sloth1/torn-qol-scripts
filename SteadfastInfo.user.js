@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GYM Steadfast
 // @namespace   hardy.gym.steadfast
-// @version     1.0
+// @version     1.2
 // @description Shows Faction steadfast info on gym page
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/index.php*
@@ -21,11 +21,12 @@
         let perkList = document.querySelector("#personal-perks .list-cont").children;
         for (var p = 0; p < perkList.length; p++) {
             let perk = perkList[p].innerText;
-            if (perk.startsWith("Faction :+ Increases") && perk.includes("gym")) {
-                let string = perk.split(" ");
-                let stat = string[3];
-                let bonus = string[7];
+            if (perk.startsWith("Faction") && perk.includes("gym")) {
+                let string = perk.split("Increases ")[1].split(" ");
+                let stat = string[0];
+                let bonus = string[4];
                 obj.steadfast[stat] = bonus;
+
             }
         }
         obj.time = Date.now()/1000;
