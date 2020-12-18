@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.1
+// @version      1.0
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -459,9 +459,9 @@
  100% { box-shadow: 0 0 0 0 rgba(92, 191, 240, .4), 0 0 0 0 rgba(92, 191, 240, .37); } }
 .items-layer .ct-item img { border-radius: 50%; animation: otherstuff 2s ease-out infinite; }
 .ct-user-wrap .user-map:before {display:none;}
-.hardyCTHeader { background-color: #0d0d0d; border: 2px solid #000; border-radius: 0.5em 0.5em 0 0; text-indent: 0.5em; font-size: 18px; color: #ffff; padding: 5px 0px 5px 0px; }
-.hardyCTContent, .hardyCTTableBox, .hardyWordFixerContent { border-radius: 0px 0px 8px 8px; background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); padding: 5px; overflow: auto; }
-.hardyCTBox, .hardyCTBox2, .ctHelperWordFixerBox { margin: 9px; margin-bottom: 18px;}
+.hardyCTHeader { background-color: #0d0d0d; border: 2px solid #000; border-radius: 0.5em 0.5em 0 0; text-indent: 0.5em; font-size: 18px; color: #ffff; }
+.hardyCTContent, .hardyCTTableBox, .hardyWordFixerContent { border-radius: 8px; background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); padding: 5px; overflow: auto; }
+.hardyCTBox, .hardyCTBox2, .ctHelperWordFixerBox {margin-bottom: 18px;}
 .hardyCTBox2 table { color: #333; font-family: Helvetica, Arial, sans-serif; width: 640px; border: 2px #808080 solid; margin: 20px; }
 .hardyCTBox2 td, th { border: 1px solid rgba(0, 0, 0, .55); height: 30px; transition: all 0.3s; }
 .hardyCTBox2 th { background: #868282; font-weight: bold; text-align: center; }
