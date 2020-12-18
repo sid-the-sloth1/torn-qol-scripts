@@ -2,7 +2,7 @@
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
 // @version      1.0
-// @description  Christmas Town Helper
+// @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
 // @grant        GM_addStyle
