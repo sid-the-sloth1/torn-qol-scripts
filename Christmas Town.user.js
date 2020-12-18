@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Christmas Town
+// @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
 // @version      1.0
 // @description  Christmas Town Helper
@@ -12,6 +12,7 @@
 // @grant        GM_xmlhttpRequest
 // @connect      script.google.com
 // @connect      script.googleusercontent.com
+// @updateURL    https://raw.githubusercontent.com/sid-the-sloth1/torn-qol-scripts/main/Christmas%20Town.user.js
 // ==/UserScript==
  
  
