@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.1
+// @version      1.2
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -14,19 +14,20 @@
 // @connect      script.googleusercontent.com
 // @updateURL    https://raw.githubusercontent.com/sid-the-sloth1/torn-qol-scripts/main/Christmas%20Town.user.js
 // ==/UserScript==
- 
- 
 (function() {
     'use strict';
- 
-    let settings = {"count": 0};
+    //Thanks to Helcostr for the list of words
+    let listofWords = ["elf","eve","fir","ham","icy","ivy","joy","pie","toy","gift","gold","list","love","nice","sled","star","wish","wrap","xmas","yule","angel","bells","cider","elves","goose","holly","jesus","merry","myrrh","party","skate","visit","candle","creche","cookie","eggnog","family","frosty","icicle","joyful","manger","season","spirit","tinsel","turkey","unwrap","wonder","winter","wreath","charity","chimney","festive","holiday","krampus","mittens","naughty","package","pageant","rejoice","rudolph","scrooge","snowman","sweater","tidings","firewood","nativity","reindeer","shopping","snowball","stocking","toboggan","trimming","vacation","wise men","workshop","yuletide","chestnuts","christmas","fruitcake","greetings","mince pie","mistletoe","ornaments","snowflake","tradition","candy cane","decoration","ice skates","jack frost","north pole","nutcracker","saint nick","yule log","card","jolly","hope","scarf","candy","sleigh","parade","snowy","wassail","blizzard","noel","partridge","give","carols","tree","fireplace","socks","lights","kings","goodwill","sugarplum","bonus","coal","snow","happy","presents","pinecone"];
+    let hideDrn = true;
     firstRun();
     addBox();
     ctGamesHelper();
     getPrices()
     deleteOldData();
- 
+    let settings = {"count": 0};
+    var hangmanArray = [];
     var wordFixerStart = false;
+    var hangmanStart = false;
     window.addEventListener("hashchange", addBox);
     let original_fetch = unsafeWindow.fetch;
     unsafeWindow.fetch = async (url, init) => {
@@ -34,10 +35,16 @@
         let respo = response.clone();
         respo.json().then((data) => {
             if (url.includes("christmas_town.php")) {
+                if (init.body) {
+                    var body = JSON.parse(init.body);
+                }
                 if (url.includes("q=move")|| url.includes("q=initMap")) {
-                    if (wordFixerStart && url.includes("q=move")) {
-                        wordFixerStart = false;
-                        stopWordFixer();
+                    if (url.includes("q=move")) {
+                        if (wordFixerStart || hangmanStart) {
+                            wordFixerStart = false;
+                            hangmanStart = false
+                            stopGame();
+                        }
                     }
                     if (data.mapData) {
                         if (data.mapData.items) {
@@ -93,7 +100,7 @@
                 } else if (url.includes("q=miniGameAction")) {
                     if (wordFixerStart) {
                         if (data.finished) {
-                            stopWordFixer();
+                            stopGame();
                             wordFixerStart = false;
                         } else {
                             if (data.progress && data.progress.word) {
@@ -101,13 +108,63 @@
                             }
                         }
                     }
-                    if (data.miniGameType && data.miniGameType == "WordFixer" && isChecked('word_fixer_helper', 2)) {
-                        if (wordFixerStart) {
-                            console.log("Word Fixer already started");
+                    if (hangmanStart) {
+                        if (data.mistakes === 6 || data.message.startsWith("Congratulations")) {
+                            hangmanStart = false;
+                            stopGame();
                         } else {
-                            wordFixerStart = true;
-                            startWordFixer();
-                            wordSolver(data.progress.word);
+                            if (data.positions.length === 0) {
+                                let array = [];
+                                let letter = body.result.character.toUpperCase();
+                                for (const word of hangmanArray) {
+                                    if (word.indexOf(letter) === -1) {
+                                        array.push(word);
+                                    }
+                                }
+                                hangmanArray = array;
+                                hangmanMain();
+                            } else {
+
+                                let array = [];
+                                let letter = body.result.character.toUpperCase();
+                                let positions = data.positions;
+                                let length = positions.length;
+                                for (const word of hangmanArray) {
+                                    var index = 0;
+                                    for (const position of positions) {
+                                        if (word[position] === letter) {
+                                            index += 1;
+                                        }
+                                    }
+                                    if (index === length && countLetter(word, letter) == length) {
+                                        array.push(word);
+                                    }
+                                }
+                                hangmanArray = getUnique(array);
+                                hangmanMain();
+                            }
+                        }
+                    }
+                    if (body && body.action && body.action === "start") {
+                        if(body.gameType) {
+                            let gameType = body.gameType;
+                            if (gameType == "gameWordFixer" && isChecked('word_fixer_helper', 2)) {
+                                wordFixerStart = true;
+                                startGame("Word Fixer");
+                                wordSolver(data.progress.word);
+
+                            }
+                            if (gameType === "gameHangman" && isChecked('hangman_helper', 2)) {
+                                hangmanStart = true;
+                                startGame("Hangman");
+                                hangmanArray = [];
+                                let words = data.progress.words;
+                                if (words.length > 1) {
+                                    hangmanStartingFunction(words[0], words[1]);
+                                } else {
+                                    hangmanStartingFunction(words[0], 0);
+                                }
+                            }
                         }
                     }
                 }
@@ -144,7 +201,7 @@
                         localStorage.setItem("ctHelperFound", JSON.stringify(savedData));
                     }
                 }
- 
+
             }
         });
         return response;
@@ -188,6 +245,7 @@
                 node.style.display = "none";
             }
         }
+        hideDoctorn();
     }
     function checkForNPC() {
         let npcList = document.querySelectorAll(".ct-user.npc");
@@ -264,15 +322,12 @@
             GM_addStyle(`img[alt='christmas wreath'] {display: none;}`);
         }
     }
-    //nsole.log(wordSolver("rFI"));
     function sortWord(word) {
         let array = word.toUpperCase().split("");
         array.sort();
         return array.join("");
     }
     function wordSolver(jumbled) {
-        //Thanks to Helcostr for the list of words
-        let listofWords = ["elf","eve","fir","ham","icy","ivy","joy","pie","toy","gift","gold","list","love","nice","sled","star","wish","wrap","xmas","yule","angel","bells","cider","elves","goose","holly","jesus","merry","myrrh","party","skate","visit","candle","creche","cookie","eggnog","family","frosty","icicle","joyful","manger","season","spirit","tinsel","turkey","unwrap","wonder","winter","wreath","charity","chimney","festive","holiday","krampus","mittens","naughty","package","pageant","rejoice","rudolph","scrooge","snowman","sweater","tidings","firewood","nativity","reindeer","shopping","snowball","stocking","toboggan","trimming","vacation","wise men","workshop","yuletide","chestnuts","christmas","fruitcake","greetings","mince pie","mistletoe","ornaments","snowflake","tradition","candy cane","decoration","ice skates","jack frost","north pole","nutcracker","saint nick","yule log","card","jolly","hope","scarf","candy","sleigh","parade","snowy","wassail","blizzard","noel","partridge","give","carols","tree","fireplace","socks","lights","kings","goodwill","sugarplum","bonus","coal","snow","happy","presents","pinecone"];
         var wordSolution = 'whereiscrimes2.0';
         for (const word of listofWords) {
             if (sortWord(word) === sortWord(jumbled)) {
@@ -280,9 +335,9 @@
             }
         }
         if (wordSolution === 'whereiscrimes2.0') {
-            document.querySelector(".hardyWordFixerContent").innerHTML = '<label class="ctHelperError">Sorry! couldn\'t find the solution. ):</label>';
+            updateGame('<label class="ctHelperError">Sorry! couldn\'t find the solution. ):</label>');
         } else {
-            document.querySelector(".hardyWordFixerContent").innerHTML = `<label class="ctHelperSuccess">${wordSolution}</label>`;
+            updateGame(`<label class="ctHelperSuccess">${wordSolution}</label>`);
         }
     }
     function getPrices() {
@@ -358,7 +413,7 @@
                 }
             });
         }
-        document.querySelector(".hardyCTBox2").innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTTableBox"><div class="hardyCTbuttonBox" style="margin-top: 8px;"><input type="checkbox" class="hardyCTHelperCheckbox" id="christmas_wreath_helper"  value="yes"'+isChecked('christmas_wreath_helper', 1)+'><label for="christmas_wreath_helper">Christmas Wreath Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="snowball_shooter_helper"  value="yes"'+isChecked('snowball_shooter_helper', 1)+'><label for="snowball_shooter_helper">Snowball Shooter Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_clawz_helper" value="yes"'+isChecked('santa_clawz_helper', 1)+'><label for="santa_clawz_helper">Santa Clawz Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="word_fixer_helper" value="yes"'+isChecked('word_fixer_helper', 1)+'><label for="word_fixer_helper">Word Fixer Helper</label><br><a href="#/" class="ctRecordLink" style="display:inline;">Go back</a><button id="hardyctHelperSave" style="background-color:#17841b;">Save</button><button id="hardyctHelperdelete" style="background-color:#f03b10;">Delete Finds</button></div><div class="hardyCTtextBox"></div><div class="hardyCTTable" style="overflow-x:auto;"></div></div>';
+        document.querySelector(".hardyCTBox2").innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTTableBox"><div class="hardyCTbuttonBox" style="margin-top: 8px;"><input type="checkbox" class="hardyCTHelperCheckbox" id="christmas_wreath_helper"  value="yes"'+isChecked('christmas_wreath_helper', 1)+'><label for="christmas_wreath_helper">Christmas Wreath Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="snowball_shooter_helper"  value="yes"'+isChecked('snowball_shooter_helper', 1)+'><label for="snowball_shooter_helper">Snowball Shooter Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_clawz_helper" value="yes"'+isChecked('santa_clawz_helper', 1)+'><label for="santa_clawz_helper">Santa Clawz Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="word_fixer_helper" value="yes"'+isChecked('word_fixer_helper', 1)+'><label for="word_fixer_helper">Word Fixer Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="hangman_helper" value="yes"'+isChecked('hangman_helper', 1)+'><label for="hangman_helper">Hangman Helper</label><br><a href="#/" class="ctRecordLink" style="display:inline;">Go back</a><button id="hardyctHelperSave" style="background-color:#17841b;">Save</button><button id="hardyctHelperdelete" style="background-color:#f03b10;">Delete Finds</button></div><div class="hardyCTtextBox"></div><div class="hardyCTTable" style="overflow-x:auto;"></div></div>';
         let itemData = localStorage.getItem("ctHelperItemInfo");
         var marketValueData;
         if (typeof itemData == "undefined" || itemData === null) {
@@ -371,7 +426,7 @@
         } else {
             let savedData = getSaveData();
             let obj = {"items": {}};
- 
+
             if (savedData == obj) {
                 document.querySelector(".hardyCTTableBox").innerHTML = '<label class="ctHelperError">You haven\'t found any items yet. Try again later!</label>';
             } else {
@@ -387,10 +442,10 @@
                     tableArray.push(`<tr><td><img src="/images/items/${mp}/medium.png", alt = "${name}"></td><td>${name}</td><td>${count}</td><td>$${formatNumber(value)}</td><td>$${formatNumber(price)}</td></tr>`);
                 }
                 document.querySelector(".hardyCTTable").innerHTML = '<table><tr><th>Image</th><th>Item Name</th><th>Amount</th><th>Price</th><th>Total</th></tr>'+tableArray.join("")+'</table><p>Total value: $'+formatNumber(totalValue)+'</p>';
- 
+
             }
         }
- 
+
     }
     function formatNumber(num) {
         return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
@@ -417,6 +472,7 @@
             GM_setValue("snowball_shooter_helper", "yes");
             GM_setValue("santa_clawz_helper", "yes");
             GM_setValue("word_fixer_helper", "yes");
+            GM_setValue("hangman_helper", "yes");
             GM_setValue("firstRun", "blah");
             GM_setValue("month", Date.now());
         }
@@ -430,18 +486,80 @@
             }
         }
     }
-    function stopWordFixer() {
-        let node = document.querySelector(".ctHelperWordFixerBox");
+    function stopGame() {
+        let node = document.querySelector(".ctHelperGameBox");
         if (node) {
             node.remove();
         }
     }
-    function startWordFixer() {
-        let node = document.createElement("div");
-        node.className = "ctHelperWordFixerBox";
-        node.innerHTML = '<div class="hardyCTHeader">Word Fixer Cheat</div><div class="hardyWordFixerContent"></div>';
-        let reference = document.querySelector(".ct-wrap");
-        reference.parentNode.insertBefore(node, reference);
+    function startGame(gameName) {
+        if (!document.querySelector(".ctHelperGameBox")) {
+            let node = document.createElement("div");
+            node.className = "ctHelperGameBox";
+            let reference = document.querySelector(".ct-wrap");
+            reference.parentNode.insertBefore(node, reference);
+        }
+        document.querySelector(".ctHelperGameBox").innerHTML = '<div class="hardyCTHeader">'+gameName+' Helper</div><div class="hardyGameBoxContent"></div>'
+    }
+    function updateGame(content) {
+        let node = document.querySelector(".hardyGameBoxContent");
+        if (node) {
+            node.innerHTML = content;
+        }
+    }
+    function hangmanStartingFunction(letters1, letters2) {
+        if (letters2 == 0) {
+            let totalLength = letters1;
+            for (const word of listofWords) {
+                if (word.length === letters1 && !word.split(" ")[1]) {
+                    hangmanArray.push(word.toUpperCase());
+                }
+            }
+        } else {
+            let totalLength = letters1 + letters2 + 1;
+            for (const word of listofWords) {
+                if (word.length === totalLength) {
+                    if (word.split(" ")[1] && word.split(" ")[0].length == letters1 && word.split(" ")[1].length == letters2) {
+                        hangmanArray.push(word.toUpperCase());
+                    }
+                }
+            }
+        }
+        hangmanMain();
+    }
+    function hangmanMain() {
+        let array = [];
+        let html1 = '<p style="font-weight: bold; font-size: 16px; margin: 5px; text-align: center;">Possible Solutions</p><p class="ctHelperSuccess">';
+        for (const word of hangmanArray) {
+            array.push(word.toUpperCase());
+        }
+        updateGame(html1+array.join(", ")+'</p>');
+    }
+
+    function getUnique(array) {
+        let newArray = [];
+        for (var mn = 0; mn < array.length; mn++) {
+            if (newArray.indexOf(array[mn]) == -1) {
+                newArray.push(array[mn]);
+            }
+        }
+        return newArray;
+    }
+    function countLetter(string, letter) {
+        let array = string.split("");
+        let obj = {};
+        obj.count = 0;
+        for (const a of array) {
+            if (a === letter) {
+                obj.count += 1;
+            }
+        }
+        return obj.count;
+    }
+    function hideDoctorn() {
+        if (hideDrn) {
+            GM_addStyle(`.doctorn-widget {display: none;}`);
+        }
     }
     GM_addStyle(`
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 101, 74, .53), 0 0 0 0 rgba(255, 109, 74, .47); }
@@ -460,8 +578,8 @@
 .items-layer .ct-item img { border-radius: 50%; animation: otherstuff 2s ease-out infinite; }
 .ct-user-wrap .user-map:before {display:none;}
 .hardyCTHeader { background-color: #0d0d0d; border: 2px solid #000; border-radius: 0.5em 0.5em 0 0; text-indent: 0.5em; font-size: 18px; color: #ffff; padding: 5px 0px 5px 0px;}
-.hardyCTContent, .hardyCTTableBox, .hardyWordFixerContent { border-radius: 0px 0px 8px 8px; background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); padding: 5px; overflow: auto; }
-.hardyCTBox, .hardyCTBox2, .ctHelperWordFixerBox {margin-bottom: 18px;}
+.hardyCTContent, .hardyCTTableBox, .hardyGameBoxContent { border-radius: 0px 0px 8px 8px; background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); padding: 5px; overflow: auto; }
+.hardyCTBox, .hardyCTBox2, .ctHelperGameBox {margin-bottom: 18px;}
 .hardyCTBox2 table { color: #333; font-family: Helvetica, Arial, sans-serif; width: 640px; border: 2px #808080 solid; margin: 20px; }
 .hardyCTBox2 td, th { border: 1px solid rgba(0, 0, 0, .55); height: 30px; transition: all 0.3s; }
 .hardyCTBox2 th { background: #868282; font-weight: bold; text-align: center; }
