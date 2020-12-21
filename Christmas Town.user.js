@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.5
+// @version      1.6
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -449,7 +449,7 @@
                     return b[4] - a[4];
                 });
                 for (const row of array) {
-                     tableArray.push(`<tr><td><img src="/images/items/${row[0]}/medium.png", alt = "${row[1]}"></td><td>${row[1]}</td><td>${row[2]}</td><td>$${formatNumber(row[3])}</td><td>$${formatNumber(row[4])}</td></tr>`);
+                    tableArray.push(`<tr><td><img src="/images/items/${row[0]}/medium.png", alt = "${row[1]}"></td><td>${row[1]}</td><td>${row[2]}</td><td>$${formatNumber(row[3])}</td><td>$${formatNumber(row[4])}</td></tr>`);
                 }
                 document.querySelector(".hardyCTTable").innerHTML = '<table><tr><th>Image</th><th>Item Name</th><th>Amount</th><th>Price</th><th>Total</th></tr>'+tableArray.join("")+'</table><p>Total value: $'+formatNumber(totalValue)+'</p>';
 
@@ -560,7 +560,16 @@
             return b[1] - a[1];
         });
         let lettersArray = [];
-        for (const letter of sortable) {
+        let limit = {};
+        limit.limit = 5;
+        let length = sortable.length;
+        if (length > 5) {
+            limit.limit = 5;
+        } else {
+            limit.limit = length;
+        }
+        for (var mkl = 0; mkl < limit.limit; mkl++) {
+            let letter = sortable[mkl];
             lettersArray.push(`${letter[0].toUpperCase()} <label class="helcostrDoesntLikeGreenCommas">(${letter[2]})</label>`);
         }
         updateGame(html1+array.join('<label class="helcostrDoesntLikeGreenCommas">, </label>')+'</p><p style="font-weight: bold; font-size: 16px; margin: 8px; text-align: center;">Suggested Letters</p><p class="ctHelperSuccess">'+lettersArray.join('<label class="helcostrDoesntLikeGreenCommas">, </label>')+'</p>');
