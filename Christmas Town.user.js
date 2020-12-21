@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.2
+// @version      1.5
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -26,6 +26,7 @@
     deleteOldData();
     let settings = {"count": 0};
     var hangmanArray = [];
+    var hangmanCharactersArray = [];
     var wordFixerStart = false;
     var hangmanStart = false;
     window.addEventListener("hashchange", addBox);
@@ -113,6 +114,7 @@
                             hangmanStart = false;
                             stopGame();
                         } else {
+                            hangmanCharactersArray.push(body.result.character.toUpperCase());
                             if (data.positions.length === 0) {
                                 let array = [];
                                 let letter = body.result.character.toUpperCase();
@@ -158,6 +160,7 @@
                                 hangmanStart = true;
                                 startGame("Hangman");
                                 hangmanArray = [];
+                                hangmanCharactersArray = [];
                                 let words = data.progress.words;
                                 if (words.length > 1) {
                                     hangmanStartingFunction(words[0], words[1]);
@@ -210,7 +213,7 @@
         if (!document.querySelector(".hardyCTBox")) {
             if (document.querySelector("#christmastownroot div[class^='appCTContainer']")) {
                 let newBox = document.createElement("div");
-                newBox.innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTContent"><br><a href="#/cthelper" class="ctRecordLink">Rewards Log</a><br><br><div class="hardyNearbyItems" style="float: left;"><label>Nearby Items(0)</label><div class="content"></div></div><div class="hardyNearbyChests" style="float:right;"><label>Nearby Chests(0)</label><div class="content"></div></div></div>';
+                newBox.innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTContent"><br><a href="#/cthelper" class="ctRecordLink">Settings</a><br><br><div class="hardyNearbyItems" style="float: left;"><label>Nearby Items(0)</label><div class="content"></div></div><div class="hardyNearbyChests" style="float:right;"><label>Nearby Chests(0)</label><div class="content"></div></div></div>';
                 newBox.className = 'hardyCTBox';
                 let doc = document.querySelector("#christmastownroot div[class^='appCTContainer']");
                 doc.insertBefore(newBox, doc.firstChild.nextSibling);
@@ -413,7 +416,7 @@
                 }
             });
         }
-        document.querySelector(".hardyCTBox2").innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTTableBox"><div class="hardyCTbuttonBox" style="margin-top: 8px;"><input type="checkbox" class="hardyCTHelperCheckbox" id="christmas_wreath_helper"  value="yes"'+isChecked('christmas_wreath_helper', 1)+'><label for="christmas_wreath_helper">Christmas Wreath Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="snowball_shooter_helper"  value="yes"'+isChecked('snowball_shooter_helper', 1)+'><label for="snowball_shooter_helper">Snowball Shooter Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_clawz_helper" value="yes"'+isChecked('santa_clawz_helper', 1)+'><label for="santa_clawz_helper">Santa Clawz Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="word_fixer_helper" value="yes"'+isChecked('word_fixer_helper', 1)+'><label for="word_fixer_helper">Word Fixer Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="hangman_helper" value="yes"'+isChecked('hangman_helper', 1)+'><label for="hangman_helper">Hangman Helper</label><br><a href="#/" class="ctRecordLink" style="display:inline;">Go back</a><button id="hardyctHelperSave" style="background-color:#17841b;">Save</button><button id="hardyctHelperdelete" style="background-color:#f03b10;">Delete Finds</button></div><div class="hardyCTtextBox"></div><div class="hardyCTTable" style="overflow-x:auto;"></div></div>';
+        document.querySelector(".hardyCTBox2").innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTTableBox"><div class="hardyCTbuttonBox" style="margin-top: 8px;"><input type="checkbox" class="hardyCTHelperCheckbox" id="christmas_wreath_helper"  value="yes"'+isChecked('christmas_wreath_helper', 1)+'><label for="christmas_wreath_helper">Christmas Wreath Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="snowball_shooter_helper"  value="yes"'+isChecked('snowball_shooter_helper', 1)+'><label for="snowball_shooter_helper">Snowball Shooter Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_clawz_helper" value="yes"'+isChecked('santa_clawz_helper', 1)+'><label for="santa_clawz_helper">Santa Clawz Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="word_fixer_helper" value="yes"'+isChecked('word_fixer_helper', 1)+'><label for="word_fixer_helper">Word Fixer Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="hangman_helper" value="yes"'+isChecked('hangman_helper', 1)+'><label for="hangman_helper">Hangman Helper</label><br><a href="#/" class="ctRecordLink" style="display:inline;">Go back</a><button id="hardyctHelperSave">Save Settings</button><button id="hardyctHelperdelete">Delete Finds</button></div><div class="hardyCTtextBox"></div><br><hr><br><div class="hardyCTTable" style="overflow-x:auto;"></div></div>';
         let itemData = localStorage.getItem("ctHelperItemInfo");
         var marketValueData;
         if (typeof itemData == "undefined" || itemData === null) {
@@ -432,6 +435,7 @@
             } else {
                 var totalValue = 0;
                 let tableArray = [];
+                let array = [];
                 for (var mp in savedData.items) {
                     let count = savedData.items[mp];
                     let item = marketValueData.items[mp];
@@ -439,7 +443,13 @@
                     let value = item.value;
                     let price = count * value
                     totalValue += parseInt(price);
-                    tableArray.push(`<tr><td><img src="/images/items/${mp}/medium.png", alt = "${name}"></td><td>${name}</td><td>${count}</td><td>$${formatNumber(value)}</td><td>$${formatNumber(price)}</td></tr>`);
+                    array.push([mp, name, count, value, price]);
+                }
+                array.sort(function(a, b) {
+                    return b[4] - a[4];
+                });
+                for (const row of array) {
+                     tableArray.push(`<tr><td><img src="/images/items/${row[0]}/medium.png", alt = "${row[1]}"></td><td>${row[1]}</td><td>${row[2]}</td><td>$${formatNumber(row[3])}</td><td>$${formatNumber(row[4])}</td></tr>`);
                 }
                 document.querySelector(".hardyCTTable").innerHTML = '<table><tr><th>Image</th><th>Item Name</th><th>Amount</th><th>Price</th><th>Total</th></tr>'+tableArray.join("")+'</table><p>Total value: $'+formatNumber(totalValue)+'</p>';
 
@@ -529,11 +539,31 @@
     }
     function hangmanMain() {
         let array = [];
-        let html1 = '<p style="font-weight: bold; font-size: 16px; margin: 5px; text-align: center;">Possible Solutions</p><p class="ctHelperSuccess">';
+        let obj = {};
+        let html1 = '<p style="font-weight: bold; font-size: 16px; margin: 8px; text-align: center;">Possible Solutions</p><p class="ctHelperSuccess">';
         for (const word of hangmanArray) {
             array.push(word.toUpperCase());
+            let letters = getUniqueLetter(word.replace(/\s/g, "").split(""));
+            for (const letter of letters) {
+                if (obj[letter]) {
+                    obj[letter] += 1;
+                } else {
+                    obj[letter] = 1;
+                }
+            }
         }
-        updateGame(html1+array.join(", ")+'</p>');
+        let sortable = [];
+        for (const key in obj) {
+            sortable.push([key, obj[key], String(+((obj[key]/hangmanArray.length)*100).toFixed(2))+"% chance"]);
+        }
+        sortable.sort(function(a, b) {
+            return b[1] - a[1];
+        });
+        let lettersArray = [];
+        for (const letter of sortable) {
+            lettersArray.push(`${letter[0].toUpperCase()} <label class="helcostrDoesntLikeGreenCommas">(${letter[2]})</label>`);
+        }
+        updateGame(html1+array.join('<label class="helcostrDoesntLikeGreenCommas">, </label>')+'</p><p style="font-weight: bold; font-size: 16px; margin: 8px; text-align: center;">Suggested Letters</p><p class="ctHelperSuccess">'+lettersArray.join('<label class="helcostrDoesntLikeGreenCommas">, </label>')+'</p>');
     }
 
     function getUnique(array) {
@@ -561,21 +591,25 @@
             GM_addStyle(`.doctorn-widget {display: none;}`);
         }
     }
+    function getUniqueLetter(argArray) {
+        let newArray = [];
+        let array = getUnique(argArray);
+        for (const letter of array) {
+            if (hangmanCharactersArray.indexOf(letter) === -1) {
+                newArray.push(letter);
+            }
+        }
+        return newArray;
+    }
     GM_addStyle(`
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 101, 74, .53), 0 0 0 0 rgba(255, 109, 74, .47); }
- 40% { box-shadow: 0 0 0 50px rgba(255, 109, 74, .76), 0 0 0 0 rgba(238, 83, 46, .45); }
- 80% { box-shadow: 0 0 0 50px rgba(242, 68, 27, .41), 0 0 0 0 rgba(255, 109, 74, .76); }
- 100% { box-shadow: 0 0 0 0 rgba(255, 109, 74, .41), 0 0 0 0 rgba(255, 109, 74, .76); } }
-.ctRecordLink { margin: 18px; padding: 5px; background-color: #4294f2; border-radius: 4px; color: #fdfcfc; text-decoration: none; }
-@keyframes otherstuff { 0% { box-shadow: 0 0 0 0 rgba(244, 226, 130, .66), 0 0 0 0 rgba(240, 229, 92, .69); height: 500%; width: 500%; }
- 40% { box-shadow: 0 0 0 50px rgba(240, 229, 92, .69), 0 0 0 0 rgba(238, 220, 99, .82); height: 500%; width: 500%; }
- 80% { box-shadow: 0 0 0 50px rgba(240, 229, 92, .69), 0 0 0 0 rgba(240, 229, 92, .69); height: 500%; width: 500px; }
- 100% { box-shadow: 0 0 0 0 rgba(238, 220, 99, .82), 0 0 0 0 rgba(244, 226, 130, .66); height: 600%; width: 600%; } }
-@keyframes othernpc { 0% { box-shadow: 0 0 0 0 rgba(130, 216, 244, .52), 0 0 0 0 rgba(92, 191, 240, .54); }
- 40% { box-shadow: 0 0 0 50px rgba(69, 174, 232, .39), 0 0 0 0 rgba(69, 174, 232, .45); }
- 80% { box-shadow: 0 0 0 50px rgba(92, 191, 240, .51), 0 0 0 0 rgba(130, 216, 244, .58); }
- 100% { box-shadow: 0 0 0 0 rgba(92, 191, 240, .4), 0 0 0 0 rgba(92, 191, 240, .37); } }
-.items-layer .ct-item img { border-radius: 50%; animation: otherstuff 2s ease-out infinite; }
+@keyframes pulse {0% {box-shadow: 0 0 0 0px;}50% {box-shadow: 0 0 0 60px;}100% {box-shadow: 0 0 0 0px;}}
+.items-layer .ct-item img  { color:rgba(244, 226, 130, .66); border-radius: 50% ;animation: pulse 2s ease-in-out infinite; }
+.ctRecordLink { margin: 18px 9px 18px 18px; padding:10px 5px 10px 5px; background-color: #4294f2; border-radius: 4px; color: #fdfcfc; text-decoration: none; font-weight: bold;}
+#hardyctHelperSave {background-color: #2da651;}
+#hardyctHelperSave:hover {background-color: #2da651c4;}
+#hardyctHelperdelete {background-color: #f03b10;}
+#hardyctHelperdelete:hover {background-color: #f03b10bd;}
+.ctRecordLink:hover {background-color: #53a3d7;}
 .ct-user-wrap .user-map:before {display:none;}
 .hardyCTHeader { background-color: #0d0d0d; border: 2px solid #000; border-radius: 0.5em 0.5em 0 0; text-indent: 0.5em; font-size: 18px; color: #ffff; padding: 5px 0px 5px 0px;}
 .hardyCTContent, .hardyCTTableBox, .hardyGameBoxContent { border-radius: 0px 0px 8px 8px; background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); padding: 5px; overflow: auto; }
@@ -591,14 +625,15 @@
 .hardyCTHelperCheckbox { margin: 8px; margin-left: 18px; }
 .hardyCTtextBox { text-align: center; }
 .hardyCTtextBox button { background-color: rgba(240, 60, 17, .91); }
-.hardyCTBox2 button { padding: 4px; border-radius: 4px; color: white; margin: 9px; }
+.hardyCTBox2 button { padding: 8px 5px 8px 5px; border-radius: 4px; color: white; margin: 9px; font-weight: bold;}
 .ctHelperError { color: #ff000091; margin: 5px; }
-.ctHelperSuccess { color: #00802fcc; margin: 5px; font-weight: bold; font-size: 16px; }
+.ctHelperSuccess { color: #00802fcc; margin: 5px; font-weight: bold; font-size: 16px; line-height: 1.3;}
 .hardyCTBox2 p { margin: 15px; font-weight: bold; font-family: Helvetica; }
 .hardyNearbyItems, .hardyNearbyChests { padding: 4px; display: inline; }
 .hardyNearbyItems label, .hardyNearbyChests label { font-weight: bold; }
 .hardyCTBox p { margin-top: 9px; font-family: Helvetica; }
-div[npcType="santa"] { border-radius: 50%; animation: pulse 2s ease-out infinite; }
-div[npcType="other"] { border-radius: 50%; animation: othernpc 2s ease-out infinite; }
+div[npcType="santa"] { border-radius: 50%; color: #ff00006e; animation: pulse 2s ease-out infinite; }
+div[npcType="other"] { border-radius: 50%; color: #0051ff87; animation: pulse 2s ease-out infinite; }
+.helcostrDoesntLikeGreenCommas {color: #333;}
 `);
 })();
