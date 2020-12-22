@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.6
+// @version      1.7
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -18,13 +18,13 @@
     'use strict';
     //Thanks to Helcostr for the list of words
     let listofWords = ["elf","eve","fir","ham","icy","ivy","joy","pie","toy","gift","gold","list","love","nice","sled","star","wish","wrap","xmas","yule","angel","bells","cider","elves","goose","holly","jesus","merry","myrrh","party","skate","visit","candle","creche","cookie","eggnog","family","frosty","icicle","joyful","manger","season","spirit","tinsel","turkey","unwrap","wonder","winter","wreath","charity","chimney","festive","holiday","krampus","mittens","naughty","package","pageant","rejoice","rudolph","scrooge","snowman","sweater","tidings","firewood","nativity","reindeer","shopping","snowball","stocking","toboggan","trimming","vacation","wise men","workshop","yuletide","chestnuts","christmas","fruitcake","greetings","mince pie","mistletoe","ornaments","snowflake","tradition","candy cane","decoration","ice skates","jack frost","north pole","nutcracker","saint nick","yule log","card","jolly","hope","scarf","candy","sleigh","parade","snowy","wassail","blizzard","noel","partridge","give","carols","tree","fireplace","socks","lights","kings","goodwill","sugarplum","bonus","coal","snow","happy","presents","pinecone"];
-    let hideDrn = true;
+    let hideDrn = false;
+    let settings = {"count": 0, "spawn": 0};
     firstRun();
     addBox();
     ctGamesHelper();
     getPrices()
     deleteOldData();
-    let settings = {"count": 0};
     var hangmanArray = [];
     var hangmanCharactersArray = [];
     var wordFixerStart = false;
@@ -48,6 +48,18 @@
                         }
                     }
                     if (data.mapData) {
+                        if (data.mapData.inventory && settings.spawn === 1) {
+                            let obj = {};
+                            obj.modifier = 0;
+                            for (const ornament of data.mapData.inventory) {
+                                if (ornament.category == "ornaments") {
+                                    obj.modifier += ornament.modifier;
+                                }
+                            }
+                            GM_setValue("spawn", obj.modifier);
+                            setTimeout(updateSpawnRate, 3000);
+                            settings.spawn = 0;
+                        }
                         if (data.mapData.items) {
                             let items = data.mapData.items;
                             if (items.length > 0) {
@@ -82,6 +94,7 @@
                         }
                         if (data.mapData && data.mapData.trigger && data.mapData.trigger.item) {
                             let trigger = data.mapData.trigger;
+                            settings.spawn = 1;
                             if (trigger.message.includes("You find")) {
                                 let itemUrl = trigger.item.image.url;
                                 let reg = /\/images\/items\/([0-9]+)\/large\.png/g;
@@ -172,6 +185,7 @@
                     }
                 }
                 if (data.prizes) {
+                    settings.spawn = 1;
                     if (data.prizes.length > 0) {
                         let savedData = getSaveData();
                         for (const prize of data.prizes) {
@@ -189,6 +203,7 @@
                 }
                 if (data.mapData && data.mapData.trigger && data.mapData.trigger.prizes) {
                     let prizes = data.mapData.trigger.prizes;
+                    settings.spawn = 1;
                     if (prizes.length > 0) {
                         let savedData = getSaveData();
                         for (const prize of prizes) {
@@ -213,13 +228,14 @@
         if (!document.querySelector(".hardyCTBox")) {
             if (document.querySelector("#christmastownroot div[class^='appCTContainer']")) {
                 let newBox = document.createElement("div");
-                newBox.innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTContent"><br><a href="#/cthelper" class="ctRecordLink">Settings</a><br><br><div class="hardyNearbyItems" style="float: left;"><label>Nearby Items(0)</label><div class="content"></div></div><div class="hardyNearbyChests" style="float:right;"><label>Nearby Chests(0)</label><div class="content"></div></div></div>';
+                newBox.innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTContent"><br><a href="#/cthelper" class="ctRecordLink">Settings</a><br><br><p class="ctHelperSpawnRate ctHelperSuccess"></p><div class="hardyNearbyItems" style="float: left;"><label>Nearby Items(0)</label><div class="content"></div></div><div class="hardyNearbyChests" style="float:right;"><label>Nearby Chests(0)</label><div class="content"></div></div></div>';
                 newBox.className = 'hardyCTBox';
                 let doc = document.querySelector("#christmastownroot div[class^='appCTContainer']");
                 doc.insertBefore(newBox, doc.firstChild.nextSibling);
                 if (timedFunction) {
                     clearInterval(timedFunction);
                 }
+                settings.spawn = 1;
             } else {
                 var timedFunction = setInterval(addBox, 1000);
             }
@@ -609,6 +625,14 @@
             }
         }
         return newArray;
+    }
+    function updateSpawnRate() {
+        let spawn = GM_getValue("spawn");
+        if (typeof spawn == "undefined" || spawn === null) {
+            settings.spawn = 1;
+        } else {
+            document.querySelector(".ctHelperSpawnRate").innerHTML = `You have a spawn rate bonus of ${spawn}%.`;
+        }
     }
     GM_addStyle(`
 @keyframes pulse {0% {box-shadow: 0 0 0 0px;}50% {box-shadow: 0 0 0 60px;}100% {box-shadow: 0 0 0 0px;}}
