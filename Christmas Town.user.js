@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.9
+// @version      1.9.1
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -16,7 +16,7 @@
 // ==/UserScript==
 (function() {
     'use strict';
-    let version = 1.9;
+    let version = "1.9.1";
     //Thanks to Ahab and Helcostr for the list of words and all the help.
     let listofWords = ["elf","eve","fir","ham","icy","ivy","joy","pie","toy","gift","gold","list","love","nice","sled","star","wish","wrap","xmas","yule","angel","bells","cider","elves","goose","holly","jesus","merry","myrrh","party","skate","visit","candle","creche","cookie","eggnog","family","frosty","icicle","joyful","manger","season","spirit","tinsel","turkey","unwrap","wonder","winter","wreath","charity","chimney","festive","holiday","krampus","mittens","naughty","package","pageant","rejoice","rudolph","scrooge","snowman","sweater","tidings","firewood","nativity","reindeer","shopping","snowball","stocking","toboggan","trimming","vacation","wise men","workshop","yuletide","chestnuts","christmas","fruitcake","greetings","mince pie","mistletoe","ornaments","snowflake","tradition","candy cane","decoration","ice skates","jack frost","north pole","nutcracker","saint nick","yule log","card","jolly","hope","scarf","candy","sleigh","parade","snowy","wassail","blizzard","noel","partridge","give","carols","tree","fireplace","socks","lights","kings","goodwill","sugarplum","bonus","coal","snow","happy","presents","pinecone"];
     let hideDrn = true;
@@ -337,14 +337,28 @@
         if (isChecked('christmas_wreath_helper', 2)) {
             GM_addStyle(`img[alt='christmas wreath'] {display: none;}`);
         }
-        if (isChecked("santa_helper", 2)) {
-            GM_addStyle(`div[npcType="santa"] { border-radius: 50%; color: #ff00006e; animation: pulse 2s ease-out infinite; }`);
-        }
-        if (isChecked("item_helper", 2)) {
-            GM_addStyle(`.items-layer .ct-item img  { color:rgba(244, 226, 130, .66); border-radius: 50% ;animation: pulse 2s ease-in-out infinite; }`);
-        }
-        if (isChecked("npc_helper", 2)) {
-            GM_addStyle(`div[npcType="other"] { border-radius: 50%; color: #0051ff87; animation: pulse 2s ease-out infinite;}`);
+        if (isChecked("accessibility_helper", 2)) {
+            GM_addStyle('@keyframes pulse {0% {box-shadow: 0 0 0 60px;}50% {box-shadow: 0 0 0 60px;}100% {box-shadow: 0 0 0 60px;}}');
+            if (isChecked("santa_helper", 2)) {
+                GM_addStyle(`div[npcType="santa"] { border-radius: 50%; color:  #a80a0a6e; animation: pulse 2s ease-out infinite; }`);
+            }
+            if (isChecked("item_helper", 2)) {
+                GM_addStyle(`.items-layer .ct-item img  { color: rgba(145, 135, 77, .66); border-radius: 50% ;animation: pulse 2s ease-in-out infinite; }`);
+            }
+            if (isChecked("npc_helper", 2)) {
+                GM_addStyle(`div[npcType="other"] { border-radius: 50%; color: #0051ff87; animation: pulse 2s ease-out infinite;}`);
+            }
+        } else {
+            GM_addStyle('@keyframes pulse {0% {box-shadow: 0 0 0 0px;}50% {box-shadow: 0 0 0 60px;}100% {box-shadow: 0 0 0 0px;}}');
+            if (isChecked("santa_helper", 2)) {
+                GM_addStyle(`div[npcType="santa"] { border-radius: 50%; color: #ff00006e; animation: pulse 2s ease-out infinite; }`);
+            }
+            if (isChecked("item_helper", 2)) {
+                GM_addStyle(`.items-layer .ct-item img  { color:rgba(244, 226, 130, .66); border-radius: 50% ;animation: pulse 2s ease-in-out infinite; }`);
+            }
+            if (isChecked("npc_helper", 2)) {
+                GM_addStyle(`div[npcType="other"] { border-radius: 50%; color: #0051ff87; animation: pulse 2s ease-out infinite;}`);
+            }
         }
     }
     function sortWord(word) {
@@ -438,7 +452,7 @@
                 }
             });
         }
-        document.querySelector(".hardyCTBox2").innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTTableBox"><div class="hardyCTbuttonBox" style="margin-top: 8px;"><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_helper"  value="yes"'+isChecked('santa_helper', 1)+'><label for="santa_helper">Highlight Santa</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="npc_helper"  value="yes"'+isChecked('npc_helper', 1)+'><label for="npc_helper">Highlight other NPCs</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="item_helper"  value="yes"'+isChecked('item_helper', 1)+'><label for="item_helper">Highlight Chest and Items</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="christmas_wreath_helper"  value="yes"'+isChecked('christmas_wreath_helper', 1)+'><label for="christmas_wreath_helper">Christmas Wreath Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="snowball_shooter_helper"  value="yes"'+isChecked('snowball_shooter_helper', 1)+'><label for="snowball_shooter_helper">Snowball Shooter Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_clawz_helper" value="yes"'+isChecked('santa_clawz_helper', 1)+'><label for="santa_clawz_helper">Santa Clawz Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="word_fixer_helper" value="yes"'+isChecked('word_fixer_helper', 1)+'><label for="word_fixer_helper">Word Fixer Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="hangman_helper" value="yes"'+isChecked('hangman_helper', 1)+'><label for="hangman_helper">Hangman Helper</label><br><a href="#/" class="ctRecordLink" style="display:inline;">Go back</a><button id="hardyctHelperSave">Save Settings</button><button id="hardyctHelperdelete">Delete Finds</button></div><div class="hardyCTtextBox"></div><br><hr><br><div class="hardyCTTable" style="overflow-x:auto;"></div></div>';
+        document.querySelector(".hardyCTBox2").innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTTableBox"><div class="hardyCTbuttonBox" style="margin-top: 8px;"><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_helper"  value="yes"'+isChecked('santa_helper', 1)+'><label for="santa_helper">Highlight Santa</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="npc_helper"  value="yes"'+isChecked('npc_helper', 1)+'><label for="npc_helper">Highlight other NPCs</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="item_helper"  value="yes"'+isChecked('item_helper', 1)+'><label for="item_helper">Highlight Chest and Items</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="christmas_wreath_helper"  value="yes"'+isChecked('christmas_wreath_helper', 1)+'><label for="christmas_wreath_helper">Christmas Wreath Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="snowball_shooter_helper"  value="yes"'+isChecked('snowball_shooter_helper', 1)+'><label for="snowball_shooter_helper">Snowball Shooter Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="santa_clawz_helper" value="yes"'+isChecked('santa_clawz_helper', 1)+'><label for="santa_clawz_helper">Santa Clawz Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="word_fixer_helper" value="yes"'+isChecked('word_fixer_helper', 1)+'><label for="word_fixer_helper">Word Fixer Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="hangman_helper" value="yes"'+isChecked('hangman_helper', 1)+'><label for="hangman_helper">Hangman Helper</label><br><input type="checkbox" class="hardyCTHelperCheckbox" id="accessibility_helper"  value="yes"'+isChecked('accessibility_helper', 1)+'><label for="accessibility_helper">Accessibility (Dims the highlighter and removes the blinking, for users facing discomfort due to bright color of highlighter)</label><br><a href="#/" class="ctRecordLink" style="display:inline;">Go back</a><button id="hardyctHelperSave">Save Settings</button><button id="hardyctHelperdelete">Delete Finds</button></div><div class="hardyCTtextBox"></div><br><hr><br><div class="hardyCTTable" style="overflow-x:auto;"></div></div>';
         let itemData = localStorage.getItem("ctHelperItemInfo");
         var marketValueData;
         if (typeof itemData == "undefined" || itemData === null) {
@@ -455,7 +469,9 @@
             if (savedData == obj) {
                 document.querySelector(".hardyCTTableBox").innerHTML = '<label class="ctHelperError">You haven\'t found any items yet. Try again later!</label>';
             } else {
-                var totalValue = 0;
+                let calc = {};
+                calc.totalValue = 0;
+                calc.count = 0;
                 let tableArray = [];
                 let array = [];
                 for (var mp in savedData.items) {
@@ -464,7 +480,8 @@
                     let name = item.name;
                     let value = item.value;
                     let price = count * value
-                    totalValue += parseInt(price);
+                    calc.count += parseInt(count);
+                    calc.totalValue += parseInt(price);
                     array.push([mp, name, count, value, price]);
                 }
                 array.sort(function(a, b) {
@@ -473,7 +490,7 @@
                 for (const row of array) {
                     tableArray.push(`<tr><td><img src="/images/items/${row[0]}/medium.png", alt = "${row[1]}"></td><td>${row[1]}</td><td>${row[2]}</td><td>$${formatNumber(row[3])}</td><td>$${formatNumber(row[4])}</td></tr>`);
                 }
-                document.querySelector(".hardyCTTable").innerHTML = '<table><tr><th>Image</th><th>Item Name</th><th>Amount</th><th>Price</th><th>Total</th></tr>'+tableArray.join("")+'</table><p>Total value: $'+formatNumber(totalValue)+'</p>';
+                document.querySelector(".hardyCTTable").innerHTML = '<table><tr><th>Image</th><th>Item Name</th><th>Amount</th><th>Price</th><th>Total</th></tr>'+tableArray.join("")+`</table><p>Total value: $${formatNumber(calc.totalValue)}</p><p> No. of Items: ${calc.count}</p><p>Average value of an item: $${formatNumber(Math.round(calc.totalValue/calc.count))}</p>`;
 
             }
         }
@@ -652,9 +669,7 @@
         }
     }
     function enableNewFeatures() {
-        GM_setValue("santa_helper", "yes");
-        GM_setValue("npc_helper", "yes");
-        GM_setValue("item_helper", "yes");
+        console.log("No feature to be enabled by default");
     }
     function initiate() {
         firstRun();
@@ -665,8 +680,7 @@
         deleteOldData();
     }
     GM_addStyle(`
-@keyframes pulse {0% {box-shadow: 0 0 0 0px;}50% {box-shadow: 0 0 0 60px;}100% {box-shadow: 0 0 0 0px;}}
-.ctRecordLink { margin: 18px 9px 18px 18px; padding:10px 5px 10px 5px; background-color: #4294f2; border-radius: 4px; color: #fdfcfc; text-decoration: none; font-weight: bold;}
+ .ctRecordLink { margin: 18px 9px 18px 18px; padding:10px 5px 10px 5px; background-color: #4294f2; border-radius: 4px; color: #fdfcfc; text-decoration: none; font-weight: bold;}
 #hardyctHelperSave {background-color: #2da651;}
 #hardyctHelperSave:hover {background-color: #2da651c4;}
 #hardyctHelperdelete {background-color: #f03b10;}
@@ -697,5 +711,6 @@
 .helcostrDoesntLikeGreenCommas {color: #333;}
 .hardyCTContent .content {overflow-y: auto; height: 60px; margin: 3px;}
 .ctHelperSpawnRate {text-align: center; font-size: 14px}
+label[for='accessibility_helper'] {line-height: 1.6; margin-left: 8px;}
 `);
 })();
