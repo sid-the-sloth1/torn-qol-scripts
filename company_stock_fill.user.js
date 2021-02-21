@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Company Stock Order
 // @namespace    hardy.company.stock
-// @version      1.2
+// @version      1.3
 // @description  Auto-fills amount in Company Stock Boxes
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/companies.php*
@@ -19,7 +19,7 @@
     function fillStock() {
         let form = document.querySelector("form[action^='companies.php?step=stock1']");
         if (form) {
-            clearInterval(cooldown);
+            //clearInterval(cooldown);
             let nodeList = document.querySelector(".stock-list-wrap .stock-list").children;
             for (const node of nodeList) {
                 if (!node.className) {
