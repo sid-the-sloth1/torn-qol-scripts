@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.2
+// @version      0.2.1
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -251,6 +251,9 @@
             if (metadata[id].days === metadata[id].progress && metadata[id].type === "active") {
                 payoutArray.push(metadata[id].acronym);
             }
+            let logoDiv = node.querySelector("div[class^='logoContainer_']");
+            let inner = logoDiv.innerHTML;
+            logoDiv.innerHTML = `<figure>${inner}<figcaption class="hardy_acr">${metadata[id].acronym}</figcaption></figure>`;
         }
         if (!pageurl.includes("link=hardy")) {
             let svg = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg portfolio"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 15 15"><path d="M11 4V2c0-1-1-1-1-1H5.05S3.946 1.002 4 2v2H2S1 4 1 5v7c0 1 1 1 1 1h11s1 0 1-1V5c0-1-1-1-1-1h-2zM5.5 2.5h4V4h-4V2.5z" fill="#626262"/></svg></span></span><span>Portfolio</span>';
@@ -609,8 +612,10 @@ td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 16px; }
 #hardyPortfolioBox img { height: 60px; width: 60px; padding: 5px 0 5px 15px; }
 #innerTable td:first-child { padding-left: 18px; width: 50%; }
+.hardy_acr { display: none; }
 /* mobile*/
 @media screen and (max-width: 600px) {
+.hardy_acr { display: block; font-size: 14px;}
 td.stonkAcr { font-size: 16px!important; text-align: center; padding: 3px 6px!important; }
 td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 14px; }
