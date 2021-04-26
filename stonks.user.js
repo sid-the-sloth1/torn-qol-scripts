@@ -5,6 +5,7 @@
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
+// @updateURL    https://raw.githubusercontent.com/sid-the-sloth1/torn-qol-scripts/main/stonks.user.js
 // @grant        unsafeWindow
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
