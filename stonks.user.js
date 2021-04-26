@@ -12,7 +12,7 @@
 // @run-at       document-start
 // @connect      script.google.com
 // ==/UserScript==
-
+//For instructions: https://github.com/sid-the-sloth1/torn-qol-scripts/blob/main/Stonks.md
 (function() {
     'use strict';
     var darkMode = false;
