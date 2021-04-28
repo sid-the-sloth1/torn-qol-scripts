@@ -355,22 +355,11 @@
                 if (target.className === "hardy_amount_max") {
                     document.querySelector(".hardy_stonk_buy_input").value = formatNum(moneyOnHand);
                 } else if (target.className === "money_to_quant") {
-                    let inputBox = document.querySelector(".hardy_stonk_buy_input");
-                    if (inputBox.getAttribute("isError") !== "yes") {
-                        let money = parseInt(inputBox.value.replace(/,/g, ""));
-                        let id = inputBox.getAttribute("info");
-                        let outputBox = document.querySelector("div[class^='buyBlock'] .input-money");
-                        if (money <= moneyOnHand) {
-                            let amount = Math.floor(money/metadata[id].price);
-                            outputBox.value = formatNum(amount);
-                        } else {
-                            let amount = Math.floor(moneyOnHand/metadata[id].price);
-                            outputBox.value = formatNum(amount);
-                        }
-                    }
+                    enterMoneyGetAmount();
                 }
             });
             document.querySelector("div[class^='stockMarket_']").addEventListener("input", function(g) {
+                console.log(g);
                 if (g.target.className == "hardy_stonk_buy_input") {
                     let inpu = g.target.value;
                     if (inpu == "" || inpu.startsWith("N") || inpu == "$") {
@@ -701,7 +690,32 @@
             }
         }
     }
-
+    function enterMoneyGetAmount() {
+        let inputBox = document.querySelector(".hardy_stonk_buy_input");
+        if (inputBox && inputBox.getAttribute("isError") !== "yes") {
+            let money = parseInt(inputBox.value.replace(/,/g, ""));
+            let id = inputBox.getAttribute("info");
+            let outputBox = document.querySelector("div[class^='buyBlock'] .input-money");
+            let msgDiv = document.querySelector("div[class^='buyBlock'] div[class^='message']");
+            if (money <= moneyOnHand) {
+                let amount = formatNum(Math.floor(money/metadata[id].price));
+                outputBox.setAttribute("value", amount);
+                outputBox.value = amount;
+                msgDiv.innerHTML = `<p>How many shares would you like to buy?</p><p><strong>${formatNumber(money)}</strong> will buy you<strong> ${amount}</strong> shares</p>`;
+            } else {
+                let amount = formatNum(Math.floor(moneyOnHand/metadata[id].price));
+                outputBox.setAttribute("value", amount);
+                outputBox.value = amount;
+                msgDiv.innerHTML = `<p>How many shares would you like to buy?</p><p><strong>${formatNumber(moneyOnHand)}</strong> will buy you<strong> ${amount}</strong> shares</p>`;
+            }
+            let event = new Event('input', {
+                bubbles: true,
+                cancelable: true,
+                isTrusted: true,
+            });
+            outputBox.dispatchEvent(event);
+        }
+    }
     GM_addStyle(`
   /*PC*/
 td.stonkAcr { font-size: 20px!important; text-align: center; padding: 3px 18px!important; }
