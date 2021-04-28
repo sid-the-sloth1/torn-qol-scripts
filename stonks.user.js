@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.2.1
+// @version      0.2.2
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -25,6 +25,7 @@
     var localData = localStorage.getItem("hardy_stonks");
     let rev_met = {};
     var savedPrefs;
+    var recentlyBought = {};
     //////////;
     let pageurl = window.location.href;
     const nativeWebSocket = unsafeWindow.WebSocket;
@@ -60,12 +61,14 @@
                                 stonksTotalVal += block[8];
                             }
                         }
+                        makeRecentList();
                         if (pageurl.includes("link=hardy")) {
                             document.querySelector("#hardyPortfolioBox").innerHTML = returnHtml();
                         } else {
                             addProfitLossInfo();
                             document.querySelector(".hardy_stonks_text_info").innerHTML = `You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}`;
                         }
+
                         //console.log(metadata);
                     }
                 }
@@ -103,7 +106,7 @@
                             let totalBuy = Math.ceil(transaction.amount*transaction.boughtPrice);
                             let totalWorth = Math.floor(transaction.amount *price);
                             let diff = totalWorth - totalBuy;
-                            portfolioData[id].push([id, transaction.date, metadata[id].acronym, transaction.amount, transaction.boughtPrice, totalBuy , price, totalWorth, diff ]);
+                            portfolioData[id].push([id, transaction.timestamp, metadata[id].acronym, transaction.amount, transaction.boughtPrice, totalBuy , price, totalWorth, diff ]);
 
                             if (stockLossObj[id]) {
                                 stockLossObj[id] += diff;
@@ -120,8 +123,6 @@
                 if (pageurl.includes("&link=hardyportfolio")) {
                     waitForLoad("#stockmarketroot", createPortfolio);
                 }
-
-                //console.log(JSON.stringify(portfolioData));
             });
         } else if (url.includes("page.php?sid=StockMarket&step=buyShares")) {
             respo.json().then((info) => {
@@ -167,7 +168,7 @@
                             let buyTotal = Math.ceil(amount * buyP);
                             let price = metadata[id].price;
                             let total = Math.round(price*amount);
-                            portfolioData[id].push([id, trans.querySelector("li[class^='date']").innerText, obj.stock, amount, buyP, buyTotal, price, total, total-buyTotal]);
+                            portfolioData[id].push([id, dateToStamp(trans.querySelector("li[class^='date']").innerText), obj.stock, amount, buyP, buyTotal, price, total, total-buyTotal]);
                         }
                     } else {
                         delete portfolioData[id];
@@ -193,7 +194,7 @@
     };
     function sendData(data) {
         let url = savedPrefs.link;
-        if (url != "" && url !== null || typeof url != "undefined") {
+        if (url != "" || url !== null || typeof url != "undefined") {
             GM_xmlhttpRequest({
                 method: "POST",
                 url:url,
@@ -267,7 +268,7 @@
             footer.parentNode.insertBefore(icon, footer);
             let div = document.createElement("div");
             div.className = "hardy_stonks_boxdef"
-            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="openprompt">Webapp</button><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
+            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="recent"> Recently Bought</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="openprompt">Webapp</button><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
             let root = document.querySelector("#stockmarketroot");
             root.insertBefore(div, root.firstChild);
             acrArray.sort();
@@ -369,6 +370,7 @@
                     applyAcrFilter(value);
                 }
             });
+            makeRecentList();
             addProfitLossInfo()
         } else {
             let svg = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg stonks"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1.11em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 717 648"><path d="M0 648h717v-56H56V46H0v602zm98-110h616V96L584 215l-121-44l-128 146l-131-47L98 380v158z" fill="#626262"/></svg></span></span><span>Stock Exchange</span>';
@@ -580,6 +582,15 @@
                     stock.setAttribute("isShow", "no");
                 }
             }
+        } else if (value === "recent") {
+            let stockList = document.querySelectorAll("ul[class^='stock_']");
+            for (const stock of stockList) {
+                let id = stock.getAttribute("info").split("_")[1];
+                stock.setAttribute("isShow", "yes");
+                if (!recentlyBought[id]) {
+                    stock.setAttribute("isShow", "no");
+                }
+            }
         }
     }
     function applyAcrFilter(value) {
@@ -604,6 +615,26 @@
                 }
             }
         }
+    }
+    function makeRecentList() {
+        recentlyBought = {};
+        let now = Math.round(Date.now()/1000);
+        for (const id in portfolioData) {
+            let transactions = portfolioData[id];
+            for (const transaction of transactions) {
+                if (now-transaction[1] <= 86400*7) {
+                    recentlyBought[id] = "hardy";
+                }
+            }
+
+        }
+    }
+    function dateToStamp(entry) {
+        let args = entry.split("/");
+        let monthArray = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let month = monthArray[parseInt(args[1])-1];
+        let stamp = new Date(`${args[0]} ${month} 20${args[2]}`).getTime();
+        return Math.round(stamp/1000);
     }
     GM_addStyle(`
     /*PC*/
