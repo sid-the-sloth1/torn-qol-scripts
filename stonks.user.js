@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.2.1
+// @version      0.3
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -22,6 +22,7 @@
     var storageObj = {};
     var stonksTotalVal = 0;
     let acrArray = [];
+    var moneyOnHand;
     var localData = localStorage.getItem("hardy_stonks");
     let rev_met = {};
     var savedPrefs;
@@ -67,6 +68,11 @@
                             document.querySelector(".hardy_stonks_text_info").innerHTML = `You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}`;
                         }
                         //console.log(metadata);
+                    }
+                } else if (data.result && data.result.data && data.result.data.data && data.result.data.data.message) {
+                    let msg = data.result.data.data.message;
+                    if (msg.namespaces && msg.namespaces.sidebar && msg.namespaces.sidebar.actions && msg.namespaces.sidebar.actions.updateMoney) {
+                        moneyOnHand = msg.namespaces.sidebar.actions.updateMoney.money;
                     }
                 }
             });
@@ -245,6 +251,7 @@
     }
     function addIndex() {
         let payoutArray = [];
+        moneyOnHand = document.querySelector("span[id='user-money']").getAttribute("data-money");
         for (const id in metadata) {
             let node = document.querySelector(`li[aria-label*="${metadata[id].name}"]`).parentNode;
             node.setAttribute("info", `${metadata[id].acronym}_${id}`);
@@ -343,6 +350,66 @@
                     document.querySelector("#selectOutput").innerHTML = '';
                 }
             });
+            document.querySelector("div[class^='stockMarket_']").addEventListener("click", (t) => {
+                let target = t.target;
+                if (target.className === "hardy_amount_max") {
+                    document.querySelector(".hardy_stonk_buy_input").value = formatNum(moneyOnHand);
+                } else if (target.className === "money_to_quant") {
+                    let inputBox = document.querySelector(".hardy_stonk_buy_input");
+                    if (inputBox.getAttribute("isError") !== "yes") {
+                        let money = parseInt(inputBox.value.replace(/,/g, ""));
+                        let id = inputBox.getAttribute("info");
+                        let outputBox = document.querySelector("div[class^='buyBlock'] .input-money");
+                        if (money <= moneyOnHand) {
+                            let amount = Math.floor(money/metadata[id].price);
+                            outputBox.value = formatNum(amount);
+                        } else {
+                            let amount = Math.floor(moneyOnHand/metadata[id].price);
+                            outputBox.value = formatNum(amount);
+                        }
+                    }
+                }
+            });
+            document.querySelector("div[class^='stockMarket_']").addEventListener("input", function(g) {
+                if (g.target.className == "hardy_stonk_buy_input") {
+                    let inpu = g.target.value;
+                    if (inpu == "" || inpu.startsWith("N") || inpu == "$") {
+                        return;
+                    } else {
+                        let inp = inpu.replace(/,/g, "").replace(/\$/g, "").replace(/\s/g, "");
+                        let val = inp.split("");
+                        let lastLetter = val[val.length -1];
+                        //console.log(lastLetter);
+                        var digits;
+                        if (lastLetter == "b" || lastLetter == "B") {
+                            val.splice(val.length-1, 1);
+                            digits = parseFloat(val.join(""))*1000000000.0
+                        } else if (lastLetter == "k" || lastLetter == "K") {
+                            val.splice(val.length-1, 1);
+                            digits = parseFloat(val.join(""))*1000.0;
+                        } else if (lastLetter == "m" || lastLetter == "M") {
+                            val.splice(val.length-1, 1);
+                            digits = parseFloat(val.join(""))*1000000.0
+                        } else {
+                            let joined = val.join("");
+                            if (joined.includes(".")) {
+                                digits = joined.replace(/./g, "h")
+                            } else {
+                                digits = joined;
+                            }
+                        }
+                        if (isNaN(parseInt(digits))) {
+                            g.target.setAttribute("isError", "yes");
+
+                            g.target.value = val.join("");
+                            //console.log(val);
+                        } else {
+                            g.target.value = formatNum(digits);
+                            g.target.setAttribute("isError", "no");
+                        }
+                    }
+                }
+            });
             document.querySelector(".hardy_stonks_box").addEventListener("input", (t) => {
                 let target = t.target;
                 //console.log(t);
@@ -370,6 +437,7 @@
                 }
             });
             addProfitLossInfo()
+            modifyStockDiv();
         } else {
             let svg = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg stonks"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1.11em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 717 648"><path d="M0 648h717v-56H56V46H0v602zm98-110h616V96L584 215l-121-44l-128 146l-131-47L98 380v158z" fill="#626262"/></svg></span></span><span>Stock Exchange</span>';
             let icon = document.createElement("a");
@@ -605,8 +673,37 @@
             }
         }
     }
+    function modifyStockDiv() {
+        setInterval(function() {
+            if (window.location.href.includes("tab=owned")) {
+                createAmountInput();
+            }
+        }, 300);
+
+    }
+    function createAmountInput() {
+        let mainDiv = document.querySelector("div[class^='stockDropdown']");
+        if (mainDiv) {
+            let id = window.location.href.split("stockID=")[1].split("&")[0];
+            let manageBlock = mainDiv.querySelector("div[class^='manageTab_'] div[class^='manageContainer']");
+            if (manageBlock && !manageBlock.querySelector(".buyHint")) {
+                let buyDiv = manageBlock.querySelector("div[class^='buyBlock'] div[class^='manageBlock']");
+                if (buyDiv.querySelector(".input-money-group")) {
+                    let height = parseInt(manageBlock.style.height.split("px")[0]);
+                    if (height < 140) {
+                        manageBlock.style.height = "140px";
+                    }
+                    let div = document.createElement("div");
+                    div.innerHTML = `<p class="buyHint">Enter amount of money you want to spend:</p><div style="display:inline;"><label class="hardy_amount_max">$</label><input type="text" class="hardy_stonk_buy_input" info="${id}" value="${formatNum(moneyOnHand)}"><label class="money_to_quant">FILL</label></div>`;
+                    div.style.margin = "4px 0";
+                    buyDiv.appendChild(div);
+                }
+            }
+        }
+    }
+
     GM_addStyle(`
-    /*PC*/
+  /*PC*/
 td.stonkAcr { font-size: 20px!important; text-align: center; padding: 3px 18px!important; }
 td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 16px; }
@@ -615,7 +712,7 @@ td.stonkInfo tr { width: 100%; font-size: 16px; }
 .hardy_acr { display: none; }
 /* mobile*/
 @media screen and (max-width: 600px) {
-.hardy_acr { display: block; font-size: 14px;}
+.hardy_acr { display: block; font-size: 14px; }
 td.stonkAcr { font-size: 16px!important; text-align: center; padding: 3px 6px!important; }
 td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 14px; }
@@ -644,7 +741,7 @@ div[class^='stockMarket'] ul[class^="stock_"] { height: 80px; }
 #openprompt { border-style: solid; border-color: rgb(169, 169, 169); padding: 8px 8px; font-size: 16px; border-radius: 4px; margin: 6px 8px; color: black; }
 body.dark-mode #openprompt { color: #ffffff; }
 #stonksAcrSelect { margin-left: 10px; }
-body.dark-mode .hardy_stonks_options select { background-color: #333; color: #ffffff;}
+body.dark-mode .hardy_stonks_options select { background-color: #333; color: #ffffff; }
 body:not(.dark-mode) .hardy_stonks_options select { background-color: #f2f2f2; }
 #selectInput { font-size: 16px; margin: 8px 0; width: 100%; }
 #selectInput input[type='number'] { margin: 0 6px; padding: 3px; border-radius: 2px; width: 80px; }
@@ -654,7 +751,19 @@ body:not(.dark-mode) .hardy_stonks_options select { background-color: #f2f2f2; }
 #selectOutput { font-size: 15px; text-align: center; }
 body:not(.dark-mode) ul[isGreen='yes'] { background-color: #ccfbcc; }
 body.dark-mode ul[isGreen='yes'] { background-color: #036203; }
-.hardy_stonks_box_header {background-color: black; color: white; padding: 5px 0; border-radius: 5px 5px 0 0; font-weight: bold; font-size: 17px; text-align: center; display: block;}
-.hardy_stonks_boxdef {margin: 0 0 5px 0;}
+.hardy_stonks_box_header { background-color: black; color: white; padding: 5px 0; border-radius: 5px 5px 0 0; font-weight: bold; font-size: 17px; text-align: center; display: block; }
+.hardy_stonks_boxdef { margin: 0 0 5px 0; }
+/* Stock Market*/
+.buyHint { margin: 4px; white-space: normal; font-weight: bold; display: block; text-align: center; }
+.hardy_stonk_buy_input { padding: 2px; border: 1px solid #b0aaaa; border-radius: 0 4px 4px 0; display: inline; }
+body.dark-mode .hardy_stonk_buy_input {background-color: #000000; color: rgb(255, 255, 255);}
+body:not(.dark-mode) .hardy_amount_max { display: inline; padding: 4px 9px; color: #757373; background: linear-gradient(to bottom, #ffffff 0%, #dddddd 100%); border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #ccc; }
+body.dark-mode .hardy_amount_max {background-color: #5b5a5a; display: inline; padding: 4px 9px; color: #c1bfbf; border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #7d7b7b;}
+.money_to_quant {margin-left: 3px; padding: 4px 8px; border-radius: 5px; background: transparent linear-gradient(180deg, #E5E5E5 0%, #BBBBBB 60%, #999999 100%) 0 0 no-repeat; color: #333; font-size: 14px; font-weight: 700; width: 20px;}
+input[isError='yes'] {background-color: #ecc8c8;}
+body.dark-mode input[isError='yes'] {background-color: #ecc8c8; color: black;}
+input[isError='no'] {background-color: #caeeca;}
+body.dark-mode input[isError='no'] {background-color: #caeeca; color: black;}
+div[class^='manageBlock_'] { padding: 6px 0; min-height: 130px;}
     `);
 })();
