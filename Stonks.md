@@ -14,7 +14,7 @@
 
 7) Choose the options as shown below.
 
-<img src="https://cdn.discordapp.com/attachments/559880545358839820/836169228922781696/Screenshot_20210426-144151_Kiwi_Browser.jpg" height="200px" width="150pc">
+<img src="https://cdn.discordapp.com/attachments/559880545358839820/836169228922781696/Screenshot_20210426-144151_Kiwi_Browser.jpg" height="200px" width="150px">
 
 8) Click on Deploy. 
 
