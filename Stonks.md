@@ -1,8 +1,8 @@
-#Stonks
+# Stonks
 
 [How to set-up the spreadsheet?](#webapp)
 
-###Webapp
+## Webapp
 
 1) Install the script.
 
