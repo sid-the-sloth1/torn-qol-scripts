@@ -8,13 +8,13 @@
 
 5) Click on Deploy option.
 
-![alt text](https://cdn.discordapp.com/attachments/559880545358839820/836169107589824562/Screenshot_20210426-144100_Kiwi_Browser.jpg "")
+<img src="https://cdn.discordapp.com/attachments/559880545358839820/836169107589824562/Screenshot_20210426-144100_Kiwi_Browser.jpg" height="200px" width="150px">
 
 6) Click on 'New Deployment'.
 
 7) Choose the options as shown below.
 
-![alt text](https://cdn.discordapp.com/attachments/559880545358839820/836169228922781696/Screenshot_20210426-144151_Kiwi_Browser.jpg "")
+<img src="https://cdn.discordapp.com/attachments/559880545358839820/836169228922781696/Screenshot_20210426-144151_Kiwi_Browser.jpg" height="200px" width="150pc">
 
 8) Click on Deploy. 
 
