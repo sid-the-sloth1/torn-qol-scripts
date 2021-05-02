@@ -22,10 +22,10 @@
     var storageObj = {};
     var stonksTotalVal = 0;
     let acrArray = [];
-    var moneyOnHand;
     var localData = localStorage.getItem("hardy_stonks");
     let rev_met = {};
     var savedPrefs;
+    var recentlyBought = {};
     //////////;
     let pageurl = window.location.href;
     const nativeWebSocket = unsafeWindow.WebSocket;
@@ -61,18 +61,15 @@
                                 stonksTotalVal += block[8];
                             }
                         }
+                        makeRecentList();
                         if (pageurl.includes("link=hardy")) {
                             document.querySelector("#hardyPortfolioBox").innerHTML = returnHtml();
                         } else {
                             addProfitLossInfo();
                             document.querySelector(".hardy_stonks_text_info").innerHTML = `You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}`;
                         }
+
                         //console.log(metadata);
-                    }
-                } else if (data.result && data.result.data && data.result.data.data && data.result.data.data.message) {
-                    let msg = data.result.data.data.message;
-                    if (msg.namespaces && msg.namespaces.sidebar && msg.namespaces.sidebar.actions && msg.namespaces.sidebar.actions.updateMoney) {
-                        moneyOnHand = msg.namespaces.sidebar.actions.updateMoney.money;
                     }
                 }
             });
@@ -109,7 +106,7 @@
                             let totalBuy = Math.ceil(transaction.amount*transaction.boughtPrice);
                             let totalWorth = Math.floor(transaction.amount *price);
                             let diff = totalWorth - totalBuy;
-                            portfolioData[id].push([id, transaction.date, metadata[id].acronym, transaction.amount, transaction.boughtPrice, totalBuy , price, totalWorth, diff ]);
+                            portfolioData[id].push([id, transaction.timestamp, metadata[id].acronym, transaction.amount, transaction.boughtPrice, totalBuy , price, totalWorth, diff ]);
 
                             if (stockLossObj[id]) {
                                 stockLossObj[id] += diff;
@@ -126,8 +123,6 @@
                 if (pageurl.includes("&link=hardyportfolio")) {
                     waitForLoad("#stockmarketroot", createPortfolio);
                 }
-
-                //console.log(JSON.stringify(portfolioData));
             });
         } else if (url.includes("page.php?sid=StockMarket&step=buyShares")) {
             respo.json().then((info) => {
@@ -173,7 +168,7 @@
                             let buyTotal = Math.ceil(amount * buyP);
                             let price = metadata[id].price;
                             let total = Math.round(price*amount);
-                            portfolioData[id].push([id, trans.querySelector("li[class^='date']").innerText, obj.stock, amount, buyP, buyTotal, price, total, total-buyTotal]);
+                            portfolioData[id].push([id, dateToStamp(trans.querySelector("li[class^='date']").innerText), obj.stock, amount, buyP, buyTotal, price, total, total-buyTotal]);
                         }
                     } else {
                         delete portfolioData[id];
@@ -199,7 +194,7 @@
     };
     function sendData(data) {
         let url = savedPrefs.link;
-        if (url != "" && url !== null || typeof url != "undefined") {
+        if (url != "" && url !== null && typeof url != "undefined") {
             GM_xmlhttpRequest({
                 method: "POST",
                 url:url,
@@ -251,13 +246,20 @@
     }
     function addIndex() {
         let payoutArray = [];
-        moneyOnHand = document.querySelector("span[id='user-money']").getAttribute("data-money");
         for (const id in metadata) {
             let node = document.querySelector(`li[aria-label*="${metadata[id].name}"]`).parentNode;
             node.setAttribute("info", `${metadata[id].acronym}_${id}`);
             if (metadata[id].days === metadata[id].progress && metadata[id].type === "active") {
                 payoutArray.push(metadata[id].acronym);
             }
+            node.draggable = true;
+            node.addEventListener("dragstart", () => {
+                node.classList.add("dragging");
+            });
+            node.addEventListener("dragend", () => {
+                node.classList.remove("dragging");
+            });
+            node.classList.add("draggable");
             let logoDiv = node.querySelector("div[class^='logoContainer_']");
             let inner = logoDiv.innerHTML;
             logoDiv.innerHTML = `<figure>${inner}<figcaption class="hardy_acr">${metadata[id].acronym}</figcaption></figure>`;
@@ -274,7 +276,7 @@
             footer.parentNode.insertBefore(icon, footer);
             let div = document.createElement("div");
             div.className = "hardy_stonks_boxdef"
-            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="openprompt">Webapp</button><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
+            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="recent"> Recently Bought</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="openprompt">Webapp</button><button id="manualEntry">Manual Logging </button><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
             let root = document.querySelector("#stockmarketroot");
             root.insertBefore(div, root.firstChild);
             acrArray.sort();
@@ -326,6 +328,9 @@
                 document.querySelector("#selectOutput").innerHTML = ``;
                 //console.log(portfolioData);
             });
+            document.querySelector("#manualEntry").addEventListener("click", () => {
+                document.querySelector("#selectInput").innerHTML = `<input id="stonks_manual_input" type="text"><button id="sendManual1">Send</button><button id="closeLink">Close</button>`;
+            });
             document.querySelector("#selectInput").addEventListener("click", (e) => {
                 let target = e.target;
                 if (target.id === "saveCondi") {
@@ -348,55 +353,32 @@
                 } else if (target.id === "closeLink") {
                     document.querySelector("#selectInput").innerHTML = '';
                     document.querySelector("#selectOutput").innerHTML = '';
-                }
-            });
-            document.querySelector("div[class^='stockMarket_']").addEventListener("click", (t) => {
-                let target = t.target;
-                if (target.className === "hardy_amount_max") {
-                    document.querySelector(".hardy_stonk_buy_input").value = formatNum(moneyOnHand);
-                } else if (target.className === "money_to_quant") {
-                    enterMoneyGetAmount();
-                }
-            });
-            document.querySelector("div[class^='stockMarket_']").addEventListener("input", function(g) {
-                console.log(g);
-                if (g.target.className == "hardy_stonk_buy_input") {
-                    let inpu = g.target.value;
-                    if (inpu == "" || inpu.startsWith("N") || inpu == "$") {
-                        return;
+                } else if (target.id === "sendManual1") {
+                    let val = document.querySelector("#stonks_manual_input").value;
+                    let str = val.trim();
+                    let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
+                    let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
+                    if (buyRegex.test(str) || sellRegex.test(str)) {
+                        document.querySelector("#selectOutput").innerHTML = `<label>Are you sure you want to log that transaction into the spreadsheet?</label><br><br><button id="sendManual2">Yes</button><button id="cancelManualSend">No</button>`;
                     } else {
-                        let inp = inpu.replace(/,/g, "").replace(/\$/g, "").replace(/\s/g, "");
-                        let val = inp.split("");
-                        let lastLetter = val[val.length -1];
-                        //console.log(lastLetter);
-                        var digits;
-                        if (lastLetter == "b" || lastLetter == "B") {
-                            val.splice(val.length-1, 1);
-                            digits = parseFloat(val.join(""))*1000000000.0
-                        } else if (lastLetter == "k" || lastLetter == "K") {
-                            val.splice(val.length-1, 1);
-                            digits = parseFloat(val.join(""))*1000.0;
-                        } else if (lastLetter == "m" || lastLetter == "M") {
-                            val.splice(val.length-1, 1);
-                            digits = parseFloat(val.join(""))*1000000.0
-                        } else {
-                            let joined = val.join("");
-                            if (joined.includes(".")) {
-                                digits = joined.replace(/./g, "h")
-                            } else {
-                                digits = joined;
-                            }
-                        }
-                        if (isNaN(parseInt(digits))) {
-                            g.target.setAttribute("isError", "yes");
-
-                            g.target.value = val.join("");
-                            //console.log(val);
-                        } else {
-                            g.target.value = formatNum(digits);
-                            g.target.setAttribute("isError", "no");
-                        }
+                        document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
                     }
+                }
+            });
+            document.querySelector("#selectOutput").addEventListener("click", (g) => {
+                let target = g.target;
+                if (target.id === "sendManual2") {
+                    let val = document.querySelector("#stonks_manual_input").value;
+                    let str = val.trim();
+                    let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
+                    let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
+                    if (buyRegex.test(str) || sellRegex.test(str)) {
+                        sendManual(str);
+                    } else {
+                        document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
+                    }
+                } else if (target.id === "cancelManualSend") {
+                    document.querySelector("#selectOutput").innerHTML = '';
                 }
             });
             document.querySelector(".hardy_stonks_box").addEventListener("input", (t) => {
@@ -425,8 +407,9 @@
                     applyAcrFilter(value);
                 }
             });
-            addProfitLossInfo()
-            modifyStockDiv();
+            makeRecentList();
+            addProfitLossInfo();
+            makeSortable();
         } else {
             let svg = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg stonks"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1.11em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 717 648"><path d="M0 648h717v-56H56V46H0v602zm98-110h616V96L584 215l-121-44l-128 146l-131-47L98 380v158z" fill="#626262"/></svg></span></span><span>Stock Exchange</span>';
             let icon = document.createElement("a");
@@ -637,6 +620,15 @@
                     stock.setAttribute("isShow", "no");
                 }
             }
+        } else if (value === "recent") {
+            let stockList = document.querySelectorAll("ul[class^='stock_']");
+            for (const stock of stockList) {
+                let id = stock.getAttribute("info").split("_")[1];
+                stock.setAttribute("isShow", "yes");
+                if (!recentlyBought[id]) {
+                    stock.setAttribute("isShow", "no");
+                }
+            }
         }
     }
     function applyAcrFilter(value) {
@@ -662,62 +654,90 @@
             }
         }
     }
-    function modifyStockDiv() {
-        setInterval(function() {
-            if (window.location.href.includes("tab=owned")) {
-                createAmountInput();
-            }
-        }, 300);
-
-    }
-    function createAmountInput() {
-        let mainDiv = document.querySelector("div[class^='stockDropdown']");
-        if (mainDiv) {
-            let id = window.location.href.split("stockID=")[1].split("&")[0];
-            let manageBlock = mainDiv.querySelector("div[class^='manageTab_'] div[class^='manageContainer']");
-            if (manageBlock && !manageBlock.querySelector(".buyHint")) {
-                let buyDiv = manageBlock.querySelector("div[class^='buyBlock'] div[class^='manageBlock']");
-                if (buyDiv.querySelector(".input-money-group")) {
-                    let height = parseInt(manageBlock.style.height.split("px")[0]);
-                    if (height < 140) {
-                        manageBlock.style.height = "140px";
-                    }
-                    let div = document.createElement("div");
-                    div.innerHTML = `<p class="buyHint">Enter amount of money you want to spend:</p><div style="display:inline;"><label class="hardy_amount_max">$</label><input type="text" class="hardy_stonk_buy_input" info="${id}" value="${formatNum(moneyOnHand)}"><label class="money_to_quant">FILL</label></div>`;
-                    div.style.margin = "4px 0";
-                    buyDiv.appendChild(div);
+    function makeRecentList() {
+        recentlyBought = {};
+        let now = Math.round(Date.now()/1000);
+        for (const id in portfolioData) {
+            let transactions = portfolioData[id];
+            for (const transaction of transactions) {
+                if (now-transaction[1] <= 86400*7) {
+                    recentlyBought[id] = "hardy";
                 }
+            }
+
+        }
+    }
+    function dateToStamp(entry) {
+        let args = entry.split("/");
+        let monthArray = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        let month = monthArray[parseInt(args[1])-1];
+        let stamp = new Date(`${args[0]} ${month} 20${args[2]}`).getTime();
+        return Math.round(stamp/1000);
+    }
+    function sendManual(str) {
+        let timePortion = str.split(" You")[0].split(" - ");
+        let dayStamp = dateToStamp(timePortion[1]);
+        let timeHMS = timePortion[0].split(":");
+        let stamp = dayStamp + parseInt(timeHMS[2]) + (parseInt(timeHMS[1])*60) + (parseInt(timeHMS[0])*3600);
+        let obj = {};
+        obj.key = "hardy";
+        let text = str.substring(20).split(" ");
+        obj.amount = parseInt(text[2].replace(/,/g, "").replace(/x/, ""));
+        let type = text[1];
+        text.splice(0, 3);
+        let afterParse = text.join(" ").split(" shares at $");
+        let stockName = afterParse[0].trim();
+        obj.stock = nameToAcr(stockName);
+        obj.stamp = stamp*1000;
+        let split = afterParse[1].split(" ");
+        obj.price = split[0].replace(/,/g, "");
+        obj.total = parseInt(split[6].replace(/,/g, "").replace(/\$/, ""));
+        if (type === "sold") {
+            obj.type = "sell";
+            obj.fee = parseInt(split[8].replace(/,/g, "").replace(/\$/, ""));
+            obj.netTotal = obj.total;
+            obj.total = obj.netTotal + obj.fee;
+        } else {
+            obj.type = "buy";
+        }
+        sendData(obj);
+        document.querySelector("#selectOutput").innerHTML = `<label class="stonksUpli">Data sent to your webapp.</label>`;
+    }
+    function nameToAcr(name) {
+        for (const id in metadata) {
+            if (metadata[id].name === name) {
+                return metadata[id].acronym;
             }
         }
     }
-    function enterMoneyGetAmount() {
-        let inputBox = document.querySelector(".hardy_stonk_buy_input");
-        if (inputBox && inputBox.getAttribute("isError") !== "yes") {
-            let money = parseInt(inputBox.value.replace(/,/g, ""));
-            let id = inputBox.getAttribute("info");
-            let outputBox = document.querySelector("div[class^='buyBlock'] .input-money");
-            let msgDiv = document.querySelector("div[class^='buyBlock'] div[class^='message']");
-            if (money <= moneyOnHand) {
-                let amount = formatNum(Math.floor(money/metadata[id].price));
-                outputBox.setAttribute("value", amount);
-                outputBox.value = amount;
-                msgDiv.innerHTML = `<p>How many shares would you like to buy?</p><p><strong>${formatNumber(money)}</strong> will buy you<strong> ${amount}</strong> shares</p>`;
+    function makeSortable() {
+        let mainDiv = document.querySelector("div[class^='stockMarket_']");
+        mainDiv.addEventListener("dragover", e => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(mainDiv, e.clientY)
+            const draggable = document.querySelector('.dragging')
+            if (afterElement == null) {
+                mainDiv.appendChild(draggable)
             } else {
-                let amount = formatNum(Math.floor(moneyOnHand/metadata[id].price));
-                outputBox.setAttribute("value", amount);
-                outputBox.value = amount;
-                msgDiv.innerHTML = `<p>How many shares would you like to buy?</p><p><strong>${formatNumber(moneyOnHand)}</strong> will buy you<strong> ${amount}</strong> shares</p>`;
+                mainDiv.insertBefore(draggable, afterElement)
             }
-            let event = new Event('input', {
-                bubbles: true,
-                cancelable: true,
-                isTrusted: true,
-            });
-            outputBox.dispatchEvent(event);
+        });
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')]
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect()
+                const offset = y - box.top - box.height / 2
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child }
+                } else {
+                    return closest
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element
         }
     }
     GM_addStyle(`
-  /*PC*/
+   /*PC*/
 td.stonkAcr { font-size: 20px!important; text-align: center; padding: 3px 18px!important; }
 td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 16px; }
@@ -726,7 +746,7 @@ td.stonkInfo tr { width: 100%; font-size: 16px; }
 .hardy_acr { display: none; }
 /* mobile*/
 @media screen and (max-width: 600px) {
-.hardy_acr { display: block; font-size: 14px; }
+.hardy_acr { display: block; font-size: 14px;}
 td.stonkAcr { font-size: 16px!important; text-align: center; padding: 3px 6px!important; }
 td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 14px; }
@@ -752,32 +772,20 @@ body.dark-mode .hardy_stonks_box { background-color: #333; margin: 0 0 6px 0; pa
 ul[isShow='no'] { display: none; }
 div[class^='stockMarket'] ul[class^="stock_"] { height: 80px; }
 .hardy_stonks_options select { padding: 9px 6px; font-size: 16px; border-radius: 4px; margin: 6px 0; }
-#openprompt { border-style: solid; border-color: rgb(169, 169, 169); padding: 8px 8px; font-size: 16px; border-radius: 4px; margin: 6px 8px; color: black; }
-body.dark-mode #openprompt { color: #ffffff; }
+#openprompt, #manualEntry { border-style: solid; border-color: rgb(169, 169, 169); padding: 8px 8px; font-size: 16px; border-radius: 4px; margin: 6px 8px; color: black; }
+body.dark-mode #openprompt, body.dark-mode #manualEntry { color: #ffffff; }
 #stonksAcrSelect { margin-left: 10px; }
-body.dark-mode .hardy_stonks_options select { background-color: #333; color: #ffffff; }
+body.dark-mode .hardy_stonks_options select { background-color: #333; color: #ffffff;}
 body:not(.dark-mode) .hardy_stonks_options select { background-color: #f2f2f2; }
 #selectInput { font-size: 16px; margin: 8px 0; width: 100%; }
 #selectInput input[type='number'] { margin: 0 6px; padding: 3px; border-radius: 2px; width: 80px; }
 #selectInput input[type='text'] { margin: 0 6px; padding: 3px; border-radius: 2px; width: 50%; }
-#saveCondi, #saveLink { padding: 6px 10px; border-radius: 4px; margin-left: 8px; background-color: #008000e8; color: white; }
-#closeLink { padding: 6px 10px; border-radius: 4px; margin-left: 8px; background-color: #973335; color: white; }
+#saveCondi, #saveLink, #sendManual1, #sendManual2 { padding: 6px 10px; border-radius: 4px; margin-left: 8px; background-color: #008000e8; color: white; }
+#closeLink, #cancelManualSend { padding: 6px 10px; border-radius: 4px; margin-left: 8px; background-color: #973335; color: white; }
 #selectOutput { font-size: 15px; text-align: center; }
 body:not(.dark-mode) ul[isGreen='yes'] { background-color: #ccfbcc; }
 body.dark-mode ul[isGreen='yes'] { background-color: #036203; }
-.hardy_stonks_box_header { background-color: black; color: white; padding: 5px 0; border-radius: 5px 5px 0 0; font-weight: bold; font-size: 17px; text-align: center; display: block; }
-.hardy_stonks_boxdef { margin: 0 0 5px 0; }
-/* Stock Market*/
-.buyHint { margin: 4px; white-space: normal; font-weight: bold; display: block; text-align: center; }
-.hardy_stonk_buy_input { padding: 2px; border: 1px solid #b0aaaa; border-radius: 0 4px 4px 0; display: inline; }
-body.dark-mode .hardy_stonk_buy_input {background-color: #000000; color: rgb(255, 255, 255);}
-body:not(.dark-mode) .hardy_amount_max { display: inline; padding: 4px 9px; color: #757373; background: linear-gradient(to bottom, #ffffff 0%, #dddddd 100%); border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #ccc; }
-body.dark-mode .hardy_amount_max {background-color: #5b5a5a; display: inline; padding: 4px 9px; color: #c1bfbf; border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #7d7b7b;}
-.money_to_quant {margin-left: 3px; padding: 4px 8px; border-radius: 5px; background: transparent linear-gradient(180deg, #E5E5E5 0%, #BBBBBB 60%, #999999 100%) 0 0 no-repeat; color: #333; font-size: 14px; font-weight: 700; width: 20px;}
-input[isError='yes'] {background-color: #ecc8c8;}
-body.dark-mode input[isError='yes'] {background-color: #ecc8c8; color: black;}
-input[isError='no'] {background-color: #caeeca;}
-body.dark-mode input[isError='no'] {background-color: #caeeca; color: black;}
-div[class^='manageBlock_'] { padding: 6px 0; min-height: 130px;}
+.hardy_stonks_box_header {background-color: black; color: white; padding: 5px 0; border-radius: 5px 5px 0 0; font-weight: bold; font-size: 17px; text-align: center; display: block;}
+.hardy_stonks_boxdef {margin: 0 0 5px 0;}
     `);
 })();
