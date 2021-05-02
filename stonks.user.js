@@ -246,6 +246,7 @@
     }
     function addIndex() {
         let payoutArray = [];
+        let mainDiv = document.querySelector("div[class^='stockMarket_']");
         for (const id in metadata) {
             let node = document.querySelector(`li[aria-label*="${metadata[id].name}"]`).parentNode;
             node.setAttribute("info", `${metadata[id].acronym}_${id}`);
@@ -260,6 +261,22 @@
                 node.classList.remove("dragging");
             });
             node.classList.add("draggable");
+            node.addEventListener("touchstart", (e) => {
+                node.classList.add("dragging");
+            });
+            node.addEventListener("touchend", () => {
+                node.classList.remove("dragging");
+            });
+            node.addEventListener("touchmove", e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(mainDiv, e.targetTouches[0].clientY)
+                const draggable = document.querySelector('.dragging')
+                if (afterElement == null) {
+                    mainDiv.appendChild(draggable)
+                } else {
+                    mainDiv.insertBefore(draggable, afterElement)
+                }
+            });
             let logoDiv = node.querySelector("div[class^='logoContainer_']");
             let inner = logoDiv.innerHTML;
             logoDiv.innerHTML = `<figure>${inner}<figcaption class="hardy_acr">${metadata[id].acronym}</figcaption></figure>`;
@@ -722,20 +739,21 @@
                 mainDiv.insertBefore(draggable, afterElement)
             }
         });
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')]
-
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect()
-                const offset = y - box.top - box.height / 2
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child }
-                } else {
-                    return closest
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element
-        }
     }
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')]
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect()
+            const offset = y - box.top - box.height / 2
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child }
+            } else {
+                return closest
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element
+    }
+
     GM_addStyle(`
    /*PC*/
 td.stonkAcr { font-size: 20px!important; text-align: center; padding: 3px 18px!important; }
