@@ -82,3 +82,5 @@ Click on **Manual Logging** option. It will open an input box paste the log ther
 
 DM Father [2131687] if you encounter any issue.
 
+
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fsid-the-sloth1%2Ftorn-qol-scripts%2Fblob%2Fmain%2FStonks.md&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
