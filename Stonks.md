@@ -69,7 +69,7 @@ Click on **Manual Logging** option. It will open an input box paste the log ther
 
 10) It will provide you with a URL link, copy it.
 
-11) Go to Torn. Stock Market page. Click on 'Webapp' option.
+11) Go to Torn. Stock Market page. Click on Settings icon in the box created by script. Click on 'Webapp' option.
 
 12) Paste the link and Click on Save.
 
