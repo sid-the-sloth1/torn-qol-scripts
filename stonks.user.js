@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.2.5
+// @version      0.3
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -268,7 +268,7 @@
             footer.parentNode.insertBefore(icon, footer);
             let div = document.createElement("div");
             div.className = "hardy_stonks_boxdef"
-            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="recent"> Recently Bought</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="openprompt">Webapp</button><button id="manualEntry">Manual Logging </button><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
+            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="relevant">Hide Irrelevant Stocks</option><option value="recent"> Recently Bought</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="manualEntry">Manual Logging </button><button class="hardy_icon"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="40px" height="40px"  preserveAspectRatio="xMidYMid meet" viewBox="0 0 1024 1024"><path  d="M512.5 390.6c-29.9 0-57.9 11.6-79.1 32.8c-21.1 21.2-32.8 49.2-32.8 79.1c0 29.9 11.7 57.9 32.8 79.1c21.2 21.1 49.2 32.8 79.1 32.8c29.9 0 57.9-11.7 79.1-32.8c21.1-21.2 32.8-49.2 32.8-79.1c0-29.9-11.7-57.9-32.8-79.1a110.96 110.96 0 0 0-79.1-32.8zm412.3 235.5l-65.4-55.9c3.1-19 4.7-38.4 4.7-57.7s-1.6-38.8-4.7-57.7l65.4-55.9a32.03 32.03 0 0 0 9.3-35.2l-.9-2.6a442.5 442.5 0 0 0-79.6-137.7l-1.8-2.1a32.12 32.12 0 0 0-35.1-9.5l-81.2 28.9c-30-24.6-63.4-44-99.6-57.5l-15.7-84.9a32.05 32.05 0 0 0-25.8-25.7l-2.7-.5c-52-9.4-106.8-9.4-158.8 0l-2.7.5a32.05 32.05 0 0 0-25.8 25.7l-15.8 85.3a353.44 353.44 0 0 0-98.9 57.3l-81.8-29.1a32 32 0 0 0-35.1 9.5l-1.8 2.1a445.93 445.93 0 0 0-79.6 137.7l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.2 56.5c-3.1 18.8-4.6 38-4.6 57c0 19.2 1.5 38.4 4.6 57l-66 56.5a32.03 32.03 0 0 0-9.3 35.2l.9 2.6c18.1 50.3 44.8 96.8 79.6 137.7l1.8 2.1a32.12 32.12 0 0 0 35.1 9.5l81.8-29.1c29.8 24.5 63 43.9 98.9 57.3l15.8 85.3a32.05 32.05 0 0 0 25.8 25.7l2.7.5a448.27 448.27 0 0 0 158.8 0l2.7-.5a32.05 32.05 0 0 0 25.8-25.7l15.7-84.9c36.2-13.6 69.6-32.9 99.6-57.5l81.2 28.9a32 32 0 0 0 35.1-9.5l1.8-2.1c34.8-41.1 61.5-87.4 79.6-137.7l.9-2.6c4.3-12.4.6-26.3-9.5-35zm-412.3 52.2c-97.1 0-175.8-78.7-175.8-175.8s78.7-175.8 175.8-175.8s175.8 78.7 175.8 175.8s-78.7 175.8-175.8 175.8z" fill="#626262"></path></svg></button><div id="prefBox_stonks"></div><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
             let root = document.querySelector("#stockmarketroot");
             root.insertBefore(div, root.firstChild);
             acrArray.sort();
@@ -278,14 +278,8 @@
             }
             document.querySelector("#stonksAcrSelect").innerHTML = array.join("");
             checkPayout(payoutArray);
-            document.querySelector(".hardy_stonks_box_header").addEventListener("click", ()=> {
-                let node = document.querySelector(".hardy_stonks_box");
-                if (node.getAttribute("style")) {
-                    node.removeAttribute("style");
-                } else {
-                    node.setAttribute("style", "display: none;");
-                }
-            });
+            addListeners();
+            makeRecentList();
             if (localData === null || typeof localData == "undefined") {
                 let tempobj = {};
                 tempobj.link = '';
@@ -297,6 +291,7 @@
                 tempobj.prefs = {};
                 tempobj.prefs.select1 = "def";
                 tempobj.prefs.select2 = "def";
+                tempobj.prefs.irr_list = [];
                 localStorage.setItem("hardy_stonks", JSON.stringify(tempobj));
                 savedPrefs = tempobj;
             } else {
@@ -315,91 +310,6 @@
                     }
                 }
             }
-            document.querySelector("#openprompt").addEventListener("click", (g) => {
-                document.querySelector("#selectInput").innerHTML = `<label>Enter Webapp link: </label><input type="text" id="stonksLink" value="${savedPrefs.link}"><button id="saveLink">Save</button><button id="closeLink">Close</button>`;
-                document.querySelector("#selectOutput").innerHTML = ``;
-                //console.log(portfolioData);
-            });
-            document.querySelector("#manualEntry").addEventListener("click", () => {
-                document.querySelector("#selectInput").innerHTML = `<input id="stonks_manual_input" type="text"><button id="sendManual1">Send</button><button id="closeLink">Close</button>`;
-            });
-            document.querySelector("#selectInput").addEventListener("click", (e) => {
-                let target = e.target;
-                if (target.id === "saveCondi") {
-                    let lessNode = document.querySelector("#lower_than");
-                    let id = lessNode.getAttribute("aria").split("_")[1];
-                    let higherNode = document.querySelector("#higher_than");
-                    savedPrefs[id].lowerThan = validNumber(lessNode.value);
-                    savedPrefs[id].higherThan = validNumber(higherNode.value);
-                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
-                    document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!</label>`;
-                } else if (target.id == "saveLink") {
-                    let link = document.querySelector("#stonksLink").value;
-                    if (link == "" || link === null || typeof link == "undefined") {
-                        document.querySelector("#selectOutput").innerHTML = `<label>Please enter a valid link!</label>`;
-                    } else {
-                        savedPrefs.link = link;
-                        localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
-                        document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!!</label>`;
-                    }
-                } else if (target.id === "closeLink") {
-                    document.querySelector("#selectInput").innerHTML = '';
-                    document.querySelector("#selectOutput").innerHTML = '';
-                } else if (target.id === "sendManual1") {
-                    let val = document.querySelector("#stonks_manual_input").value;
-                    let str = val.trim();
-                    let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
-                    let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
-                    if (buyRegex.test(str) || sellRegex.test(str)) {
-                        document.querySelector("#selectOutput").innerHTML = `<label>Are you sure you want to log that transaction into the spreadsheet?</label><br><br><button id="sendManual2">Yes</button><button id="cancelManualSend">No</button>`;
-                    } else {
-                        document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
-                    }
-                }
-            });
-            document.querySelector("#selectOutput").addEventListener("click", (g) => {
-                let target = g.target;
-                if (target.id === "sendManual2") {
-                    let val = document.querySelector("#stonks_manual_input").value;
-                    let str = val.trim();
-                    let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
-                    let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
-                    if (buyRegex.test(str) || sellRegex.test(str)) {
-                        sendManual(str);
-                    } else {
-                        document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
-                    }
-                } else if (target.id === "cancelManualSend") {
-                    document.querySelector("#selectOutput").innerHTML = '';
-                }
-            });
-            document.querySelector(".hardy_stonks_box").addEventListener("input", (t) => {
-                let target = t.target;
-                //console.log(t);
-                if (target.id === "stonks_select") {
-                    document.querySelector("#selectInput").innerHTML = '';
-                    document.querySelector("#selectOutput").innerHTML = '';
-                    let val = target.value;
-                    if (!savedPrefs.prefs) {
-                        savedPrefs.prefs = {};
-                    }
-                    savedPrefs.prefs.select1 = val;
-                    savedPrefs.prefs.select2 = "def";
-                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
-                    handleSelectInput(val);
-                } else if (target.id === "stonksAcrSelect") {
-                    let value = target.value;
-                    if (!savedPrefs.prefs) {
-                        savedPrefs.prefs = {};
-                    }
-                    savedPrefs.prefs.select1 = "def";
-                    savedPrefs.prefs.select2 = value;
-                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
-                    document.querySelector("#stonks_select").value = "def";
-                    applyAcrFilter(value);
-                }
-            });
-            makeRecentList();
             addProfitLossInfo()
         } else {
             let svg = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg stonks"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1.11em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 717 648"><path d="M0 648h717v-56H56V46H0v602zm98-110h616V96L584 215l-121-44l-128 146l-131-47L98 380v158z" fill="#626262"/></svg></span></span><span>Stock Exchange</span>';
@@ -620,6 +530,19 @@
                     stock.setAttribute("isShow", "no");
                 }
             }
+        } else if (value === "relevant") {
+            if (savedPrefs.prefs.irr_list) {
+                let stockList = document.querySelectorAll("ul[class^='stock_']");
+                for (const stock of stockList) {
+                    let acr = stock.getAttribute("info").split("_")[0];
+                    stock.setAttribute("isShow", "yes");
+                    if (savedPrefs.prefs.irr_list.indexOf(acr) !== -1) {
+                        stock.setAttribute("isShow", "no");
+                    }
+                }
+            } else {
+                document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please create a list of irrelevant stocks first by clicking on Settings icon.</label>`;
+            }
         }
     }
     function applyAcrFilter(value) {
@@ -701,6 +624,167 @@
             }
         }
     }
+    function addListeners() {
+        //Select Drop-down Stock Acronyms
+        document.querySelector(".hardy_stonks_box").addEventListener("input", (t) => {
+            let target = t.target;
+            //console.log(t);
+            if (target.id === "stonks_select") {
+                document.querySelector("#selectInput").innerHTML = '';
+                document.querySelector("#selectOutput").innerHTML = '';
+                document.querySelector("#prefBox_stonks").innerHTML = '';
+                let val = target.value;
+                if (!savedPrefs.prefs) {
+                    savedPrefs.prefs = {};
+                }
+                savedPrefs.prefs.select1 = val;
+                savedPrefs.prefs.select2 = "def";
+                localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                handleSelectInput(val);
+            } else if (target.id === "stonksAcrSelect") {
+                let value = target.value;
+                if (!savedPrefs.prefs) {
+                    savedPrefs.prefs = {};
+                }
+                savedPrefs.prefs.select1 = "def";
+                savedPrefs.prefs.select2 = value;
+                localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                document.querySelector("#stonks_select").value = "def";
+                document.querySelector("#prefBox_stonks").innerHTML = '';
+                applyAcrFilter(value);
+            }
+        });
+        //Select Output Div
+        document.querySelector("#selectOutput").addEventListener("click", (g) => {
+            let target = g.target;
+            if (target.id === "sendManual2") {
+                let val = document.querySelector("#stonks_manual_input").value;
+                let str = val.trim();
+                let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
+                let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
+                if (buyRegex.test(str) || sellRegex.test(str)) {
+                    sendManual(str);
+                } else {
+                    document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
+                }
+            } else if (target.id === "cancelManualSend") {
+                document.querySelector("#selectOutput").innerHTML = '';
+            }
+        });
+        document.querySelector("#selectInput").addEventListener("click", (e) => {
+            let target = e.target;
+            if (!target.id) {
+                if (target.className.includes("hardy_stonks_hideList")) {
+                    if (target.classList.contains("hardyStonkHidden")) {
+                        target.classList.remove("hardyStonkHidden");
+                    } else {
+                        target.classList.add("hardyStonkHidden");
+                    }
+                }
+            } else {
+                if (target.id === "saveCondi") {
+                    let lessNode = document.querySelector("#lower_than");
+                    let id = lessNode.getAttribute("aria").split("_")[1];
+                    let higherNode = document.querySelector("#higher_than");
+                    savedPrefs[id].lowerThan = validNumber(lessNode.value);
+                    savedPrefs[id].higherThan = validNumber(higherNode.value);
+                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                    document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!</label>`;
+                } else if (target.id == "saveLink") {
+                    let link = document.querySelector("#stonksLink").value;
+                    if (link == "" || link === null || typeof link == "undefined") {
+                        document.querySelector("#selectOutput").innerHTML = `<label>Please enter a valid link!</label>`;
+                    } else {
+                        savedPrefs.link = link;
+                        localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                        document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!!</label>`;
+                    }
+                } else if (target.id === "closeLink") {
+                    document.querySelector("#selectInput").innerHTML = '';
+                    document.querySelector("#selectOutput").innerHTML = '';
+                    document.querySelector("#prefBox_stonks").innerHTML = '';
+                } else if (target.id === "sendManual1") {
+                    let val = document.querySelector("#stonks_manual_input").value;
+                    let str = val.trim();
+                    let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
+                    let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
+                    if (buyRegex.test(str) || sellRegex.test(str)) {
+                        document.querySelector("#selectOutput").innerHTML = `<label>Are you sure you want to log that transaction into the spreadsheet?</label><br><br><button id="sendManual2">Yes</button><button id="cancelManualSend">No</button>`;
+                    } else {
+                        document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
+                    }
+                } else if (target.id === "selectAllStonks") {
+                    let nodeList = document.querySelectorAll(".hardy_stonks_hideList:not(.hardyStonkHidden)");
+                    for (const node of nodeList) {
+                        node.classList.add("hardyStonkHidden");
+                    }
+                } else if (target.id === "unselectAllStonks") {
+                    let nodeList = document.querySelectorAll(".hardy_stonks_hideList.hardyStonkHidden");
+                    for (const node of nodeList) {
+                        node.classList.remove("hardyStonkHidden");
+                    }
+                } else if (target.id === "saveHiddenStonks") {
+                    let array = [];
+                    let nodeList = document.querySelectorAll(".hardy_stonks_hideList.hardyStonkHidden");
+                    for (const node of nodeList) {
+                        array.push(node.innerText);
+                    }
+                    savedPrefs.prefs.irr_list = array;
+                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                    document.querySelector("#selectOutput").innerHTML = `<label class="stonksUpli">Data saved!!</label>`;
+                }
+            }
+        });
+        document.querySelector("#prefBox_stonks").addEventListener("click", (g) => {
+            let target = g.target;
+            if (target.id === "openprompt") {
+                document.querySelector("#selectInput").innerHTML = `<label>Enter Webapp link: </label><input type="text" id="stonksLink" value="${savedPrefs.link}"><button id="saveLink">Save</button><button id="closeLink">Close</button>`;
+                document.querySelector("#selectOutput").innerHTML = ``;
+            } else if (target.id === "stonkPrefClose") {
+                document.querySelector("#prefBox_stonks").innerHTML = '';
+                document.querySelector("#selectOutput").innerHTML = ``;
+                document.querySelector("#selectInput").innerHTML = ``;
+            } else if (target.id === "stonks_hide_list") {
+                if (savedPrefs.prefs) {
+                    if (!savedPrefs.prefs.irr_list) {
+                        savedPrefs.prefs.irr_list = [];
+                    }
+                } else {
+                    savedPrefs.prefs = {};
+                    savedPrefs.prefs.irr_list = [];
+                    savedPrefs.prefs.select1 = "def";
+                    savedPrefs.prefs.select2 = "def";
+                }
+                let array = [];
+                for (const acr of acrArray) {
+                    if (savedPrefs.prefs.irr_list.indexOf(acr) !== -1) {
+                        array.push(`<span class="hardy_stonks_hideList hardyStonkHidden">${acr}</span>`);
+                    } else {
+                        array.push(`<span class="hardy_stonks_hideList">${acr}</span>`);
+                    }
+                }
+                document.querySelector("#selectInput").innerHTML = `<label style="font-size: 15px; font-weight:bold; display: block;">Click on the Stocks you want to hide from list:</label>${array.join("")}<br><br><button id="selectAllStonks">Select All</button><button id="unselectAllStonks">Unselect All</button><button id="saveHiddenStonks">Save</button><button id="closeLink">Close</button>`;
+                document.querySelector("#selectOutput").innerHTML = ``;
+            }
+        });
+        document.querySelector(".hardy_icon").addEventListener("click", () => {
+            document.querySelector("#selectInput").innerHTML = '';
+            document.querySelector("#selectOutput").innerHTML = '';
+            document.querySelector("#prefBox_stonks").innerHTML = `<button id="openprompt">Webapp</button><button id="stonks_hide_list">Irrelevant List</button><button id="stonkPrefClose"> Close</button>`;
+        });
+        document.querySelector("#manualEntry").addEventListener("click", () => {
+            document.querySelector("#prefBox_stonks").innerHTML = '';
+            document.querySelector("#selectInput").innerHTML = `<input id="stonks_manual_input" type="text"><button id="sendManual1">Send</button><button id="closeLink">Close</button>`;
+        });
+        document.querySelector(".hardy_stonks_box_header").addEventListener("click", ()=> {
+            let node = document.querySelector(".hardy_stonks_box");
+            if (node.getAttribute("style")) {
+                node.removeAttribute("style");
+            } else {
+                node.setAttribute("style", "display: none;");
+            }
+        });
+    }
     GM_addStyle(`
    /*PC*/
 td.stonkAcr { font-size: 20px!important; text-align: center; padding: 3px 18px!important; }
@@ -737,20 +821,23 @@ body.dark-mode .hardy_stonks_box { background-color: #333; margin: 0 0 6px 0; pa
 ul[isShow='no'] { display: none; }
 div[class^='stockMarket'] ul[class^="stock_"] { height: 80px; }
 .hardy_stonks_options select { padding: 9px 6px; font-size: 16px; border-radius: 4px; margin: 6px 0; }
-#openprompt, #manualEntry { border-style: solid; border-color: rgb(169, 169, 169); padding: 8px 8px; font-size: 16px; border-radius: 4px; margin: 6px 8px; color: black; }
-body.dark-mode #openprompt, body.dark-mode #manualEntry { color: #ffffff; }
+#openprompt, #manualEntry, #stonks_hide_list, #selectAllStonks, #unselectAllStonks { border-style: solid; border-color: rgb(169, 169, 169); padding: 8px 8px; font-size: 16px; border-radius: 4px; margin: 6px 8px; color: black; }
+body.dark-mode #openprompt, body.dark-mode #manualEntry, body.dark-mode #stonks_hide_list,body.dark-mode #selectAllStonks, body.dark-mode #unselectAllStonks { color: #ffffff; }
 #stonksAcrSelect { margin-left: 10px; }
 body.dark-mode .hardy_stonks_options select { background-color: #333; color: #ffffff;}
 body:not(.dark-mode) .hardy_stonks_options select { background-color: #f2f2f2; }
 #selectInput { font-size: 16px; margin: 8px 0; width: 100%; }
 #selectInput input[type='number'] { margin: 0 6px; padding: 3px; border-radius: 2px; width: 80px; }
 #selectInput input[type='text'] { margin: 0 6px; padding: 3px; border-radius: 2px; width: 50%; }
-#saveCondi, #saveLink, #sendManual1, #sendManual2 { padding: 6px 10px; border-radius: 4px; margin-left: 8px; background-color: #008000e8; color: white; }
-#closeLink, #cancelManualSend { padding: 6px 10px; border-radius: 4px; margin-left: 8px; background-color: #973335; color: white; }
+#saveCondi, #saveLink, #sendManual1, #sendManual2, #saveHiddenStonks {font-size: 16px; padding: 8px 10px; border-radius: 4px; margin-left: 8px; background-color: #008000e8; color: white; }
+#closeLink, #cancelManualSend, #stonkPrefClose { font-size: 16px; padding: 8px 10px; border-radius: 4px; margin-left: 8px; background-color: #973335; color: white; }
 #selectOutput { font-size: 15px; text-align: center; }
 body:not(.dark-mode) ul[isGreen='yes'] { background-color: #ccfbcc; }
 body.dark-mode ul[isGreen='yes'] { background-color: #036203; }
 .hardy_stonks_box_header {background-color: black; color: white; padding: 5px 0; border-radius: 5px 5px 0 0; font-weight: bold; font-size: 17px; text-align: center; display: block;}
-.hardy_stonks_boxdef {margin: 0 0 5px 0;}
+.hardy_stonks_boxdef {margin: 0 0 5px 0}
+.hardy_icon  {vertical-align: middle;}
+.hardy_stonks_hideList {display: inline-block; padding: 4px 6px; margin: 4px; border: 1px solid #939292; border-radius: 5px;}
+.hardyStonkHidden {background-color: #aa6f6f; color:white;}
     `);
 })();
