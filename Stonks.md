@@ -43,6 +43,13 @@ Click on **Manual Logging** option. It will open an input box paste the log ther
 
 <img src="https://cdn.discordapp.com/attachments/523727793402413056/838026711912022016/Screenshot_20210501-174816_Kiwi_Browser.jpg" height="210px" width="300px">
 
+10) Allows you to hide **Irrelevant Stocks**. Click on **Settings icon > Irrelevant List**. Click on stocks you want to hide, the selected irrelevant stocks are marked in red. Click on **Save**. Then choose the option from Drop-down menu to hide those stocks.
+
+<img src="https://i.gyazo.com/f860d52de4bc967b509faff09df65c6e.jpg" height="210px" width="300px">
+
+
+<img src="https://i.gyazo.com/46546c1473c7926d12d7942a81c40e96.jpg" height="210px" width="300px">
+
 ## Webapp
 1) Install the script.
 
