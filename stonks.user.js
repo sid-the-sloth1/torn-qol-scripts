@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.4
+// @version      0.4.1
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -779,10 +779,11 @@
             document.querySelector("#selectOutput").innerHTML = '';
             document.querySelector("#prefBox_stonks").innerHTML = `<button id="openprompt">Webapp</button><button id="stonks_hide_list">Irrelevant List</button><button id="stonkPrefClose"> Close</button>`;
         });
+        /*
         document.querySelector("#manualEntry").addEventListener("click", () => {
             document.querySelector("#prefBox_stonks").innerHTML = '';
             document.querySelector("#selectInput").innerHTML = `<input id="stonks_manual_input" type="text"><button id="sendManual1">Send</button><button id="closeLink">Close</button>`;
-        });
+        });*/
         document.querySelector(".hardy_stonks_box_header").addEventListener("click", ()=> {
             let node = document.querySelector(".hardy_stonks_box");
             if (node.getAttribute("style")) {
