@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.4.2
+// @version      0.4.3
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -800,7 +800,7 @@ td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 16px; }
 #hardyPortfolioBox img { height: 60px; width: 60px; padding: 5px 0 5px 15px; }
 #innerTable td:first-child { padding-left: 18px; width: 50%; }
-.hardy_acr { display: none; }
+/*.hardy_acr { display: none; }*/
 /* mobile*/
 @media screen and (max-width: 600px) {
 .hardy_acr { display: block; font-size: 14px;}
