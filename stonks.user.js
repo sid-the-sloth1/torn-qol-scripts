@@ -21,7 +21,7 @@
     var stockLossObj = {};
     var storageObj = {};
     var stonksTotalVal = 0;
-    var moneyOnHand;
+    var moneyOnHand = "hardy";
     let acrArray = [];
     var localData = localStorage.getItem("hardy_stonks");
     let rev_met = {};
@@ -254,7 +254,10 @@
     }
     function addIndex() {
         let payoutArray = [];
-        moneyOnHand = document.querySelector("span[id='user-money']").getAttribute("data-money");
+        let moneyNode = document.querySelector("span[id='user-money']");
+        if (moneyNode) {
+            moneyOnHand = moneyNode.getAttribute("data-money");
+        }
         for (const id in metadata) {
             let node = document.querySelector(`li[aria-label*="${metadata[id].name}"]`).parentNode;
             node.setAttribute("info", `${metadata[id].acronym}_${id}`);
@@ -322,7 +325,9 @@
                 }
             }
             addProfitLossInfo();
-            modifyStockDiv();
+            if (moneyOnHand !== "hardy") {
+                modifyStockDiv();
+            }
         } else {
             let icon = document.createElement("a");
             icon.setAttribute("role", "button");
