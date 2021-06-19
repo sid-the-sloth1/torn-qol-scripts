@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.2.5
+// @version      0.5
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -21,6 +21,7 @@
     var stockLossObj = {};
     var storageObj = {};
     var stonksTotalVal = 0;
+    var moneyOnHand;
     let acrArray = [];
     var localData = localStorage.getItem("hardy_stonks");
     let rev_met = {};
@@ -70,6 +71,11 @@
                         }
 
                         //console.log(metadata);
+                    }
+                } else if (data.result && data.result.data && data.result.data.data && data.result.data.data.message) {
+                    let msg = data.result.data.data.message;
+                    if (msg.namespaces && msg.namespaces.sidebar && msg.namespaces.sidebar.actions && msg.namespaces.sidebar.actions.updateMoney) {
+                        moneyOnHand = msg.namespaces.sidebar.actions.updateMoney.money;
                     }
                 }
             });
@@ -193,6 +199,7 @@
         return response;
     };
     function sendData(data) {
+        // console.log(data);
         let url = savedPrefs.link;
         if (url != "" && url !== null && typeof url != "undefined") {
             GM_xmlhttpRequest({
@@ -207,13 +214,14 @@
         //alert(JSON.stringify(data));
     }
     function createPortfolio(elem) {
-        let node = elem;
-        node.setAttribute("style", "display: none;");
+        let node = elem.children;
+        node[1].setAttribute("style", "display: none;");
+        node[2].setAttribute("style", "display: none;");
         let box = document.createElement("div");
         box.id = "hardyPortfolioBox";
         //console.log(array);
         box.innerHTML = returnHtml();
-        document.querySelector(".content-wrapper").appendChild(box);
+        document.querySelector("#stockmarketroot").appendChild(box);
     }
     function formatNumber(num) {
         if (num >= 0) {
@@ -246,6 +254,7 @@
     }
     function addIndex() {
         let payoutArray = [];
+        moneyOnHand = document.querySelector("span[id='user-money']").getAttribute("data-money");
         for (const id in metadata) {
             let node = document.querySelector(`li[aria-label*="${metadata[id].name}"]`).parentNode;
             node.setAttribute("info", `${metadata[id].acronym}_${id}`);
@@ -257,20 +266,22 @@
             logoDiv.innerHTML = `<figure>${inner}<figcaption class="hardy_acr">${metadata[id].acronym}</figcaption></figure>`;
         }
         if (!pageurl.includes("link=hardy")) {
-            let svg = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg portfolio"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 15 15"><path d="M11 4V2c0-1-1-1-1-1H5.05S3.946 1.002 4 2v2H2S1 4 1 5v7c0 1 1 1 1 1h11s1 0 1-1V5c0-1-1-1-1-1h-2zM5.5 2.5h4V4h-4V2.5z" fill="#626262"/></svg></span></span><span>Portfolio</span>';
             let icon = document.createElement("a");
             icon.setAttribute("role", "button");
             icon.setAttribute("aria-labelledby", "portfolio");
-            icon.setAttribute("href", "https://www.torn.com/page.php?sid=stocks&link=hardyportfolio");
-            icon.setAttribute("class", "t-clear h c-pointer  m-icon line-h24 right");
+            icon.setAttribute("href", "https://www.torn.com/page.php?sid=stocks&link=hardyportfolio")
+            let footer = document.querySelector("a[class^='linkContainer_']")
+            icon.className = footer.className;
+            icon.classList.remove("link-container-City");
+            let spanSvg = footer.children;
+            let svg = `<span class="${spanSvg[0].className}"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 15 15"><path d="M11 4V2c0-1-1-1-1-1H5.05S3.946 1.002 4 2v2H2S1 4 1 5v7c0 1 1 1 1 1h11s1 0 1-1V5c0-1-1-1-1-1h-2zM5.5 2.5h4V4h-4V2.5z" fill="#626262"/></svg></span><span class="${spanSvg[1].className}">Portfolio</span>`;
             icon.innerHTML = svg;
-            let footer = document.querySelector(".links-footer")
             footer.parentNode.insertBefore(icon, footer);
             let div = document.createElement("div");
             div.className = "hardy_stonks_boxdef"
-            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="recent"> Recently Bought</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="manualEntry">Manual Logging </button><button class="hardy_icon"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="40px" height="40px"  preserveAspectRatio="xMidYMid meet" viewBox="0 0 1024 1024"><path  d="M512.5 390.6c-29.9 0-57.9 11.6-79.1 32.8c-21.1 21.2-32.8 49.2-32.8 79.1c0 29.9 11.7 57.9 32.8 79.1c21.2 21.1 49.2 32.8 79.1 32.8c29.9 0 57.9-11.7 79.1-32.8c21.1-21.2 32.8-49.2 32.8-79.1c0-29.9-11.7-57.9-32.8-79.1a110.96 110.96 0 0 0-79.1-32.8zm412.3 235.5l-65.4-55.9c3.1-19 4.7-38.4 4.7-57.7s-1.6-38.8-4.7-57.7l65.4-55.9a32.03 32.03 0 0 0 9.3-35.2l-.9-2.6a442.5 442.5 0 0 0-79.6-137.7l-1.8-2.1a32.12 32.12 0 0 0-35.1-9.5l-81.2 28.9c-30-24.6-63.4-44-99.6-57.5l-15.7-84.9a32.05 32.05 0 0 0-25.8-25.7l-2.7-.5c-52-9.4-106.8-9.4-158.8 0l-2.7.5a32.05 32.05 0 0 0-25.8 25.7l-15.8 85.3a353.44 353.44 0 0 0-98.9 57.3l-81.8-29.1a32 32 0 0 0-35.1 9.5l-1.8 2.1a445.93 445.93 0 0 0-79.6 137.7l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.2 56.5c-3.1 18.8-4.6 38-4.6 57c0 19.2 1.5 38.4 4.6 57l-66 56.5a32.03 32.03 0 0 0-9.3 35.2l.9 2.6c18.1 50.3 44.8 96.8 79.6 137.7l1.8 2.1a32.12 32.12 0 0 0 35.1 9.5l81.8-29.1c29.8 24.5 63 43.9 98.9 57.3l15.8 85.3a32.05 32.05 0 0 0 25.8 25.7l2.7.5a448.27 448.27 0 0 0 158.8 0l2.7-.5a32.05 32.05 0 0 0 25.8-25.7l15.7-84.9c36.2-13.6 69.6-32.9 99.6-57.5l81.2 28.9a32 32 0 0 0 35.1-9.5l1.8-2.1c34.8-41.1 61.5-87.4 79.6-137.7l.9-2.6c4.3-12.4.6-26.3-9.5-35zm-412.3 52.2c-97.1 0-175.8-78.7-175.8-175.8s78.7-175.8 175.8-175.8s175.8 78.7 175.8 175.8s-78.7 175.8-175.8 175.8z" fill="#626262"></path></svg></button><div id="prefBox_stonks"></div><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
-            let root = document.querySelector("#stockmarketroot");
-            root.insertBefore(div, root.firstChild);
+            div.innerHTML = `<div class="hardy_stonks_box_header">Stonks</div><div class="hardy_stonks_box"><div class="stonksBulletin"><label class="hardy_stonks_text_info">You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}</label><marquee behavior="scroll" direction="left" scrollamount="1"><label id="readyPayout" style="font-size: 16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="lowerBulletin" style="font-size:16px;"></label></marquee><marquee behavior="scroll" direction="left" scrollamount="2"><label id="higherBulletin" style="font-size: 16px;"></label></marquee></div><div class="hardy_stonks_options"><select id="stonks_select"><option value="def">Choose an option:</option><option value="relevant">Hide Irrelevant Stocks</option><option value="recent"> Recently Bought</option><option value="ready">Ready for Payout</option><option value="owned">Owned Stocks</option><option value="unowned">Unowned Stocks</option><option value="green">In Profit</option><option value="red">In Loss</option><option value="payout">Payout Stocks</option><option value ="passive">Passive Stocks</options></select><select id="stonksAcrSelect"></select><button id="manualEntry">Manual Logging</button><button class="hardy_icon"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="40px" height="40px"  preserveAspectRatio="xMidYMid meet" viewBox="0 0 1024 1024"><path  d="M512.5 390.6c-29.9 0-57.9 11.6-79.1 32.8c-21.1 21.2-32.8 49.2-32.8 79.1c0 29.9 11.7 57.9 32.8 79.1c21.2 21.1 49.2 32.8 79.1 32.8c29.9 0 57.9-11.7 79.1-32.8c21.1-21.2 32.8-49.2 32.8-79.1c0-29.9-11.7-57.9-32.8-79.1a110.96 110.96 0 0 0-79.1-32.8zm412.3 235.5l-65.4-55.9c3.1-19 4.7-38.4 4.7-57.7s-1.6-38.8-4.7-57.7l65.4-55.9a32.03 32.03 0 0 0 9.3-35.2l-.9-2.6a442.5 442.5 0 0 0-79.6-137.7l-1.8-2.1a32.12 32.12 0 0 0-35.1-9.5l-81.2 28.9c-30-24.6-63.4-44-99.6-57.5l-15.7-84.9a32.05 32.05 0 0 0-25.8-25.7l-2.7-.5c-52-9.4-106.8-9.4-158.8 0l-2.7.5a32.05 32.05 0 0 0-25.8 25.7l-15.8 85.3a353.44 353.44 0 0 0-98.9 57.3l-81.8-29.1a32 32 0 0 0-35.1 9.5l-1.8 2.1a445.93 445.93 0 0 0-79.6 137.7l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.2 56.5c-3.1 18.8-4.6 38-4.6 57c0 19.2 1.5 38.4 4.6 57l-66 56.5a32.03 32.03 0 0 0-9.3 35.2l.9 2.6c18.1 50.3 44.8 96.8 79.6 137.7l1.8 2.1a32.12 32.12 0 0 0 35.1 9.5l81.8-29.1c29.8 24.5 63 43.9 98.9 57.3l15.8 85.3a32.05 32.05 0 0 0 25.8 25.7l2.7.5a448.27 448.27 0 0 0 158.8 0l2.7-.5a32.05 32.05 0 0 0 25.8-25.7l15.7-84.9c36.2-13.6 69.6-32.9 99.6-57.5l81.2 28.9a32 32 0 0 0 35.1-9.5l1.8-2.1c34.8-41.1 61.5-87.4 79.6-137.7l.9-2.6c4.3-12.4.6-26.3-9.5-35zm-412.3 52.2c-97.1 0-175.8-78.7-175.8-175.8s78.7-175.8 175.8-175.8s175.8 78.7 175.8 175.8s-78.7 175.8-175.8 175.8z" fill="#626262"></path></svg></button><div id="prefBox_stonks"></div><div id="selectInput"></div><div id="selectOutput"></div></div></div>`;
+            let root = document.querySelector("#stockmarketroot ul[class*='titles_']");
+            root.parentNode.insertBefore(div, root);
             acrArray.sort();
             let array = ['<option value="def">Choose a stock:</option>'];
             for (const acronym of acrArray) {
@@ -310,16 +321,19 @@
                     }
                 }
             }
-            addProfitLossInfo()
+            addProfitLossInfo();
+            modifyStockDiv();
         } else {
-            let svg = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg stonks"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1.11em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 717 648"><path d="M0 648h717v-56H56V46H0v602zm98-110h616V96L584 215l-121-44l-128 146l-131-47L98 380v158z" fill="#626262"/></svg></span></span><span>Stock Exchange</span>';
             let icon = document.createElement("a");
             icon.setAttribute("role", "button");
             icon.setAttribute("aria-labelledby", "stonks");
             icon.setAttribute("href", "https://www.torn.com/page.php?sid=stocks");
-            icon.setAttribute("class", "t-clear h c-pointer  m-icon line-h24 right");
+            let footer = document.querySelector("a[class^='linkContainer_']")
+            icon.className = footer.className;
+            icon.classList.remove("link-container-City");
+            let spanSvg = footer.children;
+            let svg = `<span class="${spanSvg[0].className}"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1.11em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 717 648"><path d="M0 648h717v-56H56V46H0v602zm98-110h616V96L584 215l-121-44l-128 146l-131-47L98 380v158z" fill="#626262"/></svg></span><span class="${spanSvg[1].className}">Stock Exchange</span>`;
             icon.innerHTML = svg;
-            let footer = document.querySelector(".links-footer")
             footer.parentNode.insertBefore(icon, footer);
         }
     }
@@ -530,6 +544,19 @@
                     stock.setAttribute("isShow", "no");
                 }
             }
+        } else if (value === "relevant") {
+            if (savedPrefs.prefs.irr_list) {
+                let stockList = document.querySelectorAll("ul[class^='stock_']");
+                for (const stock of stockList) {
+                    let acr = stock.getAttribute("info").split("_")[0];
+                    stock.setAttribute("isShow", "yes");
+                    if (savedPrefs.prefs.irr_list.indexOf(acr) !== -1) {
+                        stock.setAttribute("isShow", "no");
+                    }
+                }
+            } else {
+                document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please create a list of irrelevant stocks first by clicking on Settings icon.</label>`;
+            }
         }
     }
     function applyAcrFilter(value) {
@@ -575,6 +602,34 @@
         let stamp = new Date(`${args[0]} ${month} 20${args[2]}`).getTime();
         return Math.round(stamp/1000);
     }
+    function modifyStockDiv() {
+        setInterval(function() {
+            if (window.location.href.includes("tab=owned")) {
+                createAmountInput();
+            }
+        }, 300);
+
+    }
+    function createAmountInput() {
+        let mainDiv = document.querySelector("div[class^='stockDropdown']");
+        if (mainDiv) {
+            let id = window.location.href.split("stockID=")[1].split("&")[0];
+            let manageBlock = mainDiv.querySelector("div[class^='manageTab_'] div[class^='manageContainer']");
+            if (manageBlock && !manageBlock.querySelector(".buyHint")) {
+                let buyDiv = manageBlock.querySelector("div[class^='buyBlock'] div[class^='manageBlock']");
+                if (buyDiv.querySelector(".input-money-group")) {
+                    let height = parseInt(manageBlock.style.height.split("px")[0]);
+                    if (height < 140) {
+                        manageBlock.style.height = "140px";
+                    }
+                    let div = document.createElement("div");
+                    div.innerHTML = `<p class="buyHint">Enter amount of money you want to spend:</p><div style="display:inline;"><label class="hardy_amount_max">$</label><input type="text" class="hardy_stonk_buy_input" info="${id}" value="${formatNum(moneyOnHand)}"><label class="money_to_quant">FILL</label></div>`;
+                    div.style.margin = "4px 0";
+                    buyDiv.appendChild(div);
+                }
+            }
+        }
+    }
     function sendManual(str) {
         let timePortion = str.split(" You")[0].split(" - ");
         let dayStamp = dateToStamp(timePortion[1]);
@@ -588,6 +643,7 @@
         text.splice(0, 3);
         let afterParse = text.join(" ").split(" shares at $");
         let stockName = afterParse[0].trim();
+        console.log(stockName);
         obj.stock = nameToAcr(stockName);
         obj.stamp = stamp*1000;
         let split = afterParse[1].split(" ");
@@ -658,38 +714,137 @@
                 document.querySelector("#selectOutput").innerHTML = '';
             }
         });
+        document.querySelector("div[class^='stockMarket_']").addEventListener("input", function(g) {
+            if (g.target.className == "hardy_stonk_buy_input") {
+                let inpu = g.target.value;
+                if (inpu == "" || inpu.startsWith("N") || inpu == "$") {
+                    return;
+                } else {
+                    let inp = inpu.replace(/,/g, "").replace(/\$/g, "").replace(/\s/g, "");
+                    let val = inp.split("");
+                    let lastLetter = val[val.length -1];
+                    //console.log(lastLetter);
+                    var digits;
+                    if (lastLetter == "b" || lastLetter == "B") {
+                        val.splice(val.length-1, 1);
+                        digits = parseFloat(val.join(""))*1000000000.0
+                    } else if (lastLetter == "k" || lastLetter == "K") {
+                        val.splice(val.length-1, 1);
+                        digits = parseFloat(val.join(""))*1000.0;
+                    } else if (lastLetter == "m" || lastLetter == "M") {
+                        val.splice(val.length-1, 1);
+                        digits = parseFloat(val.join(""))*1000000.0
+                    } else {
+                        let joined = val.join("");
+                        if (joined.includes(".")) {
+                            digits = joined.replace(/./g, "h")
+                        } else {
+                            digits = joined;
+                        }
+                    }
+                    if (isNaN(parseInt(digits))) {
+                        g.target.setAttribute("isError", "yes");
+
+                        g.target.value = val.join("");
+                        //console.log(val);
+                    } else {
+                        g.target.value = formatNum(digits);
+                        g.target.setAttribute("isError", "no");
+                    }
+                }
+            }
+        });
+        document.querySelector("div[class^='stockMarket_']").addEventListener("click", (t) => {
+            let target = t.target;
+            if (target.className === "hardy_amount_max") {
+                document.querySelector(".hardy_stonk_buy_input").value = formatNum(moneyOnHand);
+            } else if (target.className === "money_to_quant") {
+                let inputBox = document.querySelector(".hardy_stonk_buy_input");
+                if (inputBox.getAttribute("isError") !== "yes") {
+                    let money = parseInt(inputBox.value.replace(/,/g, ""));
+                    let id = inputBox.getAttribute("info");
+                    let outputBox = document.querySelector("div[class^='buyBlock'] .input-money");
+                    let lastVal = outputBox.value;
+                    let placeHolderVal;
+                    if (money <= moneyOnHand) {
+                        let amount = Math.floor(money/metadata[id].price);
+                        outputBox.value = formatNum(amount);
+                        placeHolderVal = formatNum(amount);
+                    } else {
+                        let amount = Math.floor(moneyOnHand/metadata[id].price);
+                        outputBox.value = formatNum(amount);
+                        placeHolderVal = formatNum(amount);
+                    }
+                    let event = new Event('input', { bubbles: true });
+                    let tracker = outputBox._valueTracker;
+                    if (tracker) {
+                        tracker.setValue(lastVal);
+                    }
+                    outputBox.dispatchEvent(event);
+                }
+            }
+        });
         document.querySelector("#selectInput").addEventListener("click", (e) => {
             let target = e.target;
-            if (target.id === "saveCondi") {
-                let lessNode = document.querySelector("#lower_than");
-                let id = lessNode.getAttribute("aria").split("_")[1];
-                let higherNode = document.querySelector("#higher_than");
-                savedPrefs[id].lowerThan = validNumber(lessNode.value);
-                savedPrefs[id].higherThan = validNumber(higherNode.value);
-                localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
-                document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!</label>`;
-            } else if (target.id == "saveLink") {
-                let link = document.querySelector("#stonksLink").value;
-                if (link == "" || link === null || typeof link == "undefined") {
-                    document.querySelector("#selectOutput").innerHTML = `<label>Please enter a valid link!</label>`;
-                } else {
-                    savedPrefs.link = link;
-                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
-                    document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!!</label>`;
+            if (!target.id) {
+                if (target.className.includes("hardy_stonks_hideList")) {
+                    if (target.classList.contains("hardyStonkHidden")) {
+                        target.classList.remove("hardyStonkHidden");
+                    } else {
+                        target.classList.add("hardyStonkHidden");
+                    }
                 }
-            } else if (target.id === "closeLink") {
-                document.querySelector("#selectInput").innerHTML = '';
-                document.querySelector("#selectOutput").innerHTML = '';
-                document.querySelector("#prefBox_stonks").innerHTML = '';
-            } else if (target.id === "sendManual1") {
-                let val = document.querySelector("#stonks_manual_input").value;
-                let str = val.trim();
-                let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
-                let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
-                if (buyRegex.test(str) || sellRegex.test(str)) {
-                    document.querySelector("#selectOutput").innerHTML = `<label>Are you sure you want to log that transaction into the spreadsheet?</label><br><br><button id="sendManual2">Yes</button><button id="cancelManualSend">No</button>`;
-                } else {
-                    document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
+            } else {
+                if (target.id === "saveCondi") {
+                    let lessNode = document.querySelector("#lower_than");
+                    let id = lessNode.getAttribute("aria").split("_")[1];
+                    let higherNode = document.querySelector("#higher_than");
+                    savedPrefs[id].lowerThan = validNumber(lessNode.value);
+                    savedPrefs[id].higherThan = validNumber(higherNode.value);
+                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                    document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!</label>`;
+                } else if (target.id == "saveLink") {
+                    let link = document.querySelector("#stonksLink").value;
+                    if (link == "" || link === null || typeof link == "undefined") {
+                        document.querySelector("#selectOutput").innerHTML = `<label>Please enter a valid link!</label>`;
+                    } else {
+                        savedPrefs.link = link;
+                        localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                        document.querySelector("#selectOutput").innerHTML = `<label>Data saved successfully!!</label>`;
+                    }
+                } else if (target.id === "closeLink") {
+                    document.querySelector("#selectInput").innerHTML = '';
+                    document.querySelector("#selectOutput").innerHTML = '';
+                    document.querySelector("#prefBox_stonks").innerHTML = '';
+                } else if (target.id === "sendManual1") {
+                    let val = document.querySelector("#stonks_manual_input").value;
+                    let str = val.trim();
+                    let buyRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You bought ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+)/gm;
+                    let sellRegex = /[0-9]{2}:[0-9]{2}:[0-9]{2} - [0-9]{2}\/[0-9]{2}\/[0-9]{2} You sold ([\d,]+)x (.+) (?:shares|share) at \$([\d,.]+) each for a total of \$([\d,]+) after \$([\d,]+) in fees/gm;
+                    if (buyRegex.test(str) || sellRegex.test(str)) {
+                        document.querySelector("#selectOutput").innerHTML = `<label>Are you sure you want to log that transaction into the spreadsheet?</label><br><br><button id="sendManual2">Yes</button><button id="cancelManualSend">No</button>`;
+                    } else {
+                        document.querySelector("#selectOutput").innerHTML = `<label class="stonksDownli">Please copy the transaction log properly from activity log and make sure time is also included.</label>`;
+                    }
+                } else if (target.id === "selectAllStonks") {
+                    let nodeList = document.querySelectorAll(".hardy_stonks_hideList:not(.hardyStonkHidden)");
+                    for (const node of nodeList) {
+                        node.classList.add("hardyStonkHidden");
+                    }
+                } else if (target.id === "unselectAllStonks") {
+                    let nodeList = document.querySelectorAll(".hardy_stonks_hideList.hardyStonkHidden");
+                    for (const node of nodeList) {
+                        node.classList.remove("hardyStonkHidden");
+                    }
+                } else if (target.id === "saveHiddenStonks") {
+                    let array = [];
+                    let nodeList = document.querySelectorAll(".hardy_stonks_hideList.hardyStonkHidden");
+                    for (const node of nodeList) {
+                        array.push(node.innerText);
+                    }
+                    savedPrefs.prefs.irr_list = array;
+                    localStorage.setItem("hardy_stonks", JSON.stringify(savedPrefs));
+                    document.querySelector("#selectOutput").innerHTML = `<label class="stonksUpli">Data saved!!</label>`;
                 }
             }
         });
@@ -715,7 +870,7 @@
                 }
                 let array = [];
                 for (const acr of acrArray) {
-                    if (savedPrefs.prefs.irr_list.indexOf(acr) === -1) {
+                    if (savedPrefs.prefs.irr_list.indexOf(acr) !== -1) {
                         array.push(`<span class="hardy_stonks_hideList hardyStonkHidden">${acr}</span>`);
                     } else {
                         array.push(`<span class="hardy_stonks_hideList">${acr}</span>`);
@@ -726,8 +881,11 @@
             }
         });
         document.querySelector(".hardy_icon").addEventListener("click", () => {
+            document.querySelector("#selectInput").innerHTML = '';
+            document.querySelector("#selectOutput").innerHTML = '';
             document.querySelector("#prefBox_stonks").innerHTML = `<button id="openprompt">Webapp</button><button id="stonks_hide_list">Irrelevant List</button><button id="stonkPrefClose"> Close</button>`;
         });
+
         document.querySelector("#manualEntry").addEventListener("click", () => {
             document.querySelector("#prefBox_stonks").innerHTML = '';
             document.querySelector("#selectInput").innerHTML = `<input id="stonks_manual_input" type="text"><button id="sendManual1">Send</button><button id="closeLink">Close</button>`;
@@ -748,7 +906,7 @@ td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 16px; }
 #hardyPortfolioBox img { height: 60px; width: 60px; padding: 5px 0 5px 15px; }
 #innerTable td:first-child { padding-left: 18px; width: 50%; }
-.hardy_acr { display: none; }
+/*.hardy_acr { display: none; }*/
 /* mobile*/
 @media screen and (max-width: 600px) {
 .hardy_acr { display: block; font-size: 14px;}
@@ -793,5 +951,19 @@ body.dark-mode ul[isGreen='yes'] { background-color: #036203; }
 .hardy_stonks_box_header {background-color: black; color: white; padding: 5px 0; border-radius: 5px 5px 0 0; font-weight: bold; font-size: 17px; text-align: center; display: block;}
 .hardy_stonks_boxdef {margin: 0 0 5px 0}
 .hardy_icon  {vertical-align: middle;}
+.hardy_stonks_hideList {display: inline-block; padding: 4px 6px; margin: 4px; border: 1px solid #939292; border-radius: 5px;}
+.hardyStonkHidden {background-color: #aa6f6f; color:white;}
+/*Test*/
+.buyHint { margin: 4px; white-space: normal; font-weight: bold; display: block; text-align: center; }
+.hardy_stonk_buy_input { padding: 2px; border: 1px solid #b0aaaa; border-radius: 0 4px 4px 0; display: inline; }
+body.dark-mode .hardy_stonk_buy_input {background-color: #000000; color: rgb(255, 255, 255);}
+body:not(.dark-mode) .hardy_amount_max { display: inline; padding: 4px 9px; color: #757373; background: linear-gradient(to bottom, #ffffff 0%, #dddddd 100%); border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #ccc; }
+body.dark-mode .hardy_amount_max {background-color: #5b5a5a; display: inline; padding: 4px 9px; color: #c1bfbf; border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #7d7b7b;}
+.money_to_quant {margin-left: 3px; padding: 4px 8px; border-radius: 5px; background: transparent linear-gradient(180deg, #E5E5E5 0%, #BBBBBB 60%, #999999 100%) 0 0 no-repeat; color: #333; font-size: 14px; font-weight: 700; width: 20px;}
+input[isError='yes'] {background-color: #ecc8c8;}
+body.dark-mode input[isError='yes'] {background-color: #ecc8c8; color: black;}
+input[isError='no'] {background-color: #caeeca;}
+body.dark-mode input[isError='no'] {background-color: #caeeca; color: black;}
+div[class^='manageBlock_'] { padding: 6px 0; min-height: 130px;}
     `);
 })();
