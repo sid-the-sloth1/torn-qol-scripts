@@ -749,9 +749,10 @@
                     }
                     if (isNaN(parseInt(digits))) {
                         g.target.setAttribute("isError", "yes");
-
                         g.target.value = val.join("");
                         //console.log(val);
+                    } else if (digits === "") {
+                        g.target.setAttribute("isError", "yes");
                     } else {
                         g.target.value = formatNum(digits);
                         g.target.setAttribute("isError", "no");
@@ -781,6 +782,7 @@
                         placeHolderVal = formatNum(amount);
                     }
                     let event = new Event('input', { bubbles: true });
+
                     let tracker = outputBox._valueTracker;
                     if (tracker) {
                         tracker.setValue(lastVal);
@@ -912,6 +914,7 @@ td.stonkInfo tr { width: 100%; font-size: 16px; }
 #hardyPortfolioBox img { height: 60px; width: 60px; padding: 5px 0 5px 15px; }
 #innerTable td:first-child { padding-left: 18px; width: 50%; }
 /*.hardy_acr { display: none; }*/
+div[class^='manageContainer_'] { padding: 6px 0; min-height: 150px!important;}
 /* mobile*/
 @media screen and (max-width: 600px) {
 .hardy_acr { display: block; font-size: 14px;}
@@ -919,7 +922,10 @@ td.stonkAcr { font-size: 16px!important; text-align: center; padding: 3px 6px!im
 td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 14px; }
 #hardyPortfolioBox img { height: 40px; width: 40px; padding: 5px; }
-#innerTable td:first-child { padding: 6px; width: auto; } }
+#innerTable td:first-child { padding: 6px; width: auto; }
+div[class^='manageContainer_'] { padding: 6px 0; min-height: 250px!important;}
+div[class^='buyBlock_'] {height: 150px!important;}
+}
 /* Portfolio*/
 body:not(.dark-mode) #hardyPortfolioBox tbody { background-color: #fff; padding: 8px; }
 body.dark-mode #hardyPortfolioBox tbody { background-color: #333; padding: 8px; color: #ffffff; }
@@ -969,6 +975,6 @@ input[isError='yes'] {background-color: #ecc8c8;}
 body.dark-mode input[isError='yes'] {background-color: #ecc8c8; color: black;}
 input[isError='no'] {background-color: #caeeca;}
 body.dark-mode input[isError='no'] {background-color: #caeeca; color: black;}
-div[class^='manageBlock_'] { padding: 6px 0; min-height: 130px;}
+div[class^='manageBlock_'] { padding: 6px 0!important;}
     `);
 })();
