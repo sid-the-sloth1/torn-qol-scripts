@@ -630,6 +630,7 @@
                     let div = document.createElement("div");
                     div.innerHTML = `<p class="buyHint">Enter amount of money you want to spend:</p><div style="display:inline;"><label class="hardy_amount_max">$</label><input type="text" class="hardy_stonk_buy_input" info="${id}" value="${formatNum(moneyOnHand)}"><label class="money_to_quant">FILL</label></div>`;
                     div.style.margin = "4px 0";
+                    div.style.textAlign = "center";
                     buyDiv.appendChild(div);
                 }
             }
@@ -924,7 +925,7 @@ td.stonkInfo tr { width: 100%; font-size: 14px; }
 #hardyPortfolioBox img { height: 40px; width: 40px; padding: 5px; }
 #innerTable td:first-child { padding: 6px; width: auto; }
 div[class^='manageContainer_'] { padding: 6px 0; min-height: 250px!important;}
-div[class^='buyBlock_'] {height: 150px!important;}
+div[class^='buyBlock_'] {min-height: 150px!important;}
 }
 /* Portfolio*/
 body:not(.dark-mode) #hardyPortfolioBox tbody { background-color: #fff; padding: 8px; }
