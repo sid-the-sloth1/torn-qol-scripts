@@ -1,7 +1,8 @@
+
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.4.3
+// @version      0.5
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -21,6 +22,7 @@
     var stockLossObj = {};
     var storageObj = {};
     var stonksTotalVal = 0;
+    var moneyOnHand = "hardy";
     let acrArray = [];
     var localData = localStorage.getItem("hardy_stonks");
     let rev_met = {};
@@ -70,6 +72,11 @@
                         }
 
                         //console.log(metadata);
+                    }
+                } else if (data.result && data.result.data && data.result.data.data && data.result.data.data.message) {
+                    let msg = data.result.data.data.message;
+                    if (msg.namespaces && msg.namespaces.sidebar && msg.namespaces.sidebar.actions && msg.namespaces.sidebar.actions.updateMoney) {
+                        moneyOnHand = msg.namespaces.sidebar.actions.updateMoney.money;
                     }
                 }
             });
@@ -193,7 +200,7 @@
         return response;
     };
     function sendData(data) {
-       // console.log(data);
+        // console.log(data);
         let url = savedPrefs.link;
         if (url != "" && url !== null && typeof url != "undefined") {
             GM_xmlhttpRequest({
@@ -248,6 +255,10 @@
     }
     function addIndex() {
         let payoutArray = [];
+        let moneyNode = document.querySelector("span[id='user-money']");
+        if (moneyNode) {
+            moneyOnHand = moneyNode.getAttribute("data-money");
+        }
         for (const id in metadata) {
             let node = document.querySelector(`li[aria-label*="${metadata[id].name}"]`).parentNode;
             node.setAttribute("info", `${metadata[id].acronym}_${id}`);
@@ -314,7 +325,10 @@
                     }
                 }
             }
-            addProfitLossInfo()
+            addProfitLossInfo();
+            if (moneyOnHand !== "hardy") {
+                modifyStockDiv();
+            }
         } else {
             let icon = document.createElement("a");
             icon.setAttribute("role", "button");
@@ -594,6 +608,35 @@
         let stamp = new Date(`${args[0]} ${month} 20${args[2]}`).getTime();
         return Math.round(stamp/1000);
     }
+    function modifyStockDiv() {
+        setInterval(function() {
+            if (window.location.href.includes("tab=owned")) {
+                createAmountInput();
+            }
+        }, 300);
+
+    }
+    function createAmountInput() {
+        let mainDiv = document.querySelector("div[class^='stockDropdown']");
+        if (mainDiv) {
+            let id = window.location.href.split("stockID=")[1].split("&")[0];
+            let manageBlock = mainDiv.querySelector("div[class^='manageTab_'] div[class^='manageContainer']");
+            if (manageBlock && !manageBlock.querySelector(".buyHint")) {
+                let buyDiv = manageBlock.querySelector("div[class^='buyBlock'] div[class^='manageBlock']");
+                if (buyDiv.querySelector(".input-money-group")) {
+                    let height = parseInt(manageBlock.style.height.split("px")[0]);
+                    if (height < 140) {
+                        manageBlock.style.height = "140px";
+                    }
+                    let div = document.createElement("div");
+                    div.innerHTML = `<p class="buyHint">Enter amount of money you want to spend:</p><div style="display:inline;"><label class="hardy_amount_max">$</label><input type="text" class="hardy_stonk_buy_input" info="${id}" value="${formatNum(moneyOnHand)}"><label class="money_to_quant">FILL</label></div>`;
+                    div.style.margin = "4px 0";
+                    div.style.textAlign = "center";
+                    buyDiv.appendChild(div);
+                }
+            }
+        }
+    }
     function sendManual(str) {
         let timePortion = str.split(" You")[0].split(" - ");
         let dayStamp = dateToStamp(timePortion[1]);
@@ -676,6 +719,78 @@
                 }
             } else if (target.id === "cancelManualSend") {
                 document.querySelector("#selectOutput").innerHTML = '';
+            }
+        });
+        document.querySelector("div[class^='stockMarket_']").addEventListener("input", function(g) {
+            if (g.target.className == "hardy_stonk_buy_input") {
+                let inpu = g.target.value;
+                if (inpu == "" || inpu.startsWith("N") || inpu == "$") {
+                    return;
+                } else {
+                    let inp = inpu.replace(/,/g, "").replace(/\$/g, "").replace(/\s/g, "");
+                    let val = inp.split("");
+                    let lastLetter = val[val.length -1];
+                    //console.log(lastLetter);
+                    var digits;
+                    if (lastLetter == "b" || lastLetter == "B") {
+                        val.splice(val.length-1, 1);
+                        digits = parseFloat(val.join(""))*1000000000.0
+                    } else if (lastLetter == "k" || lastLetter == "K") {
+                        val.splice(val.length-1, 1);
+                        digits = parseFloat(val.join(""))*1000.0;
+                    } else if (lastLetter == "m" || lastLetter == "M") {
+                        val.splice(val.length-1, 1);
+                        digits = parseFloat(val.join(""))*1000000.0
+                    } else {
+                        let joined = val.join("");
+                        if (joined.includes(".")) {
+                            digits = joined.replace(/./g, "h")
+                        } else {
+                            digits = joined;
+                        }
+                    }
+                    if (isNaN(parseInt(digits))) {
+                        g.target.setAttribute("isError", "yes");
+                        g.target.value = val.join("");
+                        //console.log(val);
+                    } else if (digits === "") {
+                        g.target.setAttribute("isError", "yes");
+                    } else {
+                        g.target.value = formatNum(digits);
+                        g.target.setAttribute("isError", "no");
+                    }
+                }
+            }
+        });
+        document.querySelector("div[class^='stockMarket_']").addEventListener("click", (t) => {
+            let target = t.target;
+            if (target.className === "hardy_amount_max") {
+                document.querySelector(".hardy_stonk_buy_input").value = formatNum(moneyOnHand);
+            } else if (target.className === "money_to_quant") {
+                let inputBox = document.querySelector(".hardy_stonk_buy_input");
+                if (inputBox.getAttribute("isError") !== "yes") {
+                    let money = parseInt(inputBox.value.replace(/,/g, ""));
+                    let id = inputBox.getAttribute("info");
+                    let outputBox = document.querySelector("div[class^='buyBlock'] .input-money");
+                    let lastVal = outputBox.value;
+                    let placeHolderVal;
+                    if (money <= moneyOnHand) {
+                        let amount = Math.floor(money/metadata[id].price);
+                        outputBox.value = formatNum(amount);
+                        placeHolderVal = formatNum(amount);
+                    } else {
+                        let amount = Math.floor(moneyOnHand/metadata[id].price);
+                        outputBox.value = formatNum(amount);
+                        placeHolderVal = formatNum(amount);
+                    }
+                    let event = new Event('input', { bubbles: true });
+
+                    let tracker = outputBox._valueTracker;
+                    if (tracker) {
+                        tracker.setValue(lastVal);
+                    }
+                    outputBox.dispatchEvent(event);
+                }
             }
         });
         document.querySelector("#selectInput").addEventListener("click", (e) => {
@@ -779,7 +894,7 @@
             document.querySelector("#selectOutput").innerHTML = '';
             document.querySelector("#prefBox_stonks").innerHTML = `<button id="openprompt">Webapp</button><button id="stonks_hide_list">Irrelevant List</button><button id="stonkPrefClose"> Close</button>`;
         });
-        
+
         document.querySelector("#manualEntry").addEventListener("click", () => {
             document.querySelector("#prefBox_stonks").innerHTML = '';
             document.querySelector("#selectInput").innerHTML = `<input id="stonks_manual_input" type="text"><button id="sendManual1">Send</button><button id="closeLink">Close</button>`;
@@ -801,6 +916,7 @@ td.stonkInfo tr { width: 100%; font-size: 16px; }
 #hardyPortfolioBox img { height: 60px; width: 60px; padding: 5px 0 5px 15px; }
 #innerTable td:first-child { padding-left: 18px; width: 50%; }
 /*.hardy_acr { display: none; }*/
+div[class^='manageContainer_'] { padding: 6px 0; min-height: 150px!important;}
 /* mobile*/
 @media screen and (max-width: 600px) {
 .hardy_acr { display: block; font-size: 14px;}
@@ -808,7 +924,10 @@ td.stonkAcr { font-size: 16px!important; text-align: center; padding: 3px 6px!im
 td.stonkInfo td { padding: 0 8px; }
 td.stonkInfo tr { width: 100%; font-size: 14px; }
 #hardyPortfolioBox img { height: 40px; width: 40px; padding: 5px; }
-#innerTable td:first-child { padding: 6px; width: auto; } }
+#innerTable td:first-child { padding: 6px; width: auto; }
+div[class^='manageContainer_'] { padding: 6px 0; min-height: 250px!important;}
+div[class^='buyBlock_'] {min-height: 150px!important;}
+}
 /* Portfolio*/
 body:not(.dark-mode) #hardyPortfolioBox tbody { background-color: #fff; padding: 8px; }
 body.dark-mode #hardyPortfolioBox tbody { background-color: #333; padding: 8px; color: #ffffff; }
@@ -847,5 +966,17 @@ body.dark-mode ul[isGreen='yes'] { background-color: #036203; }
 .hardy_icon  {vertical-align: middle;}
 .hardy_stonks_hideList {display: inline-block; padding: 4px 6px; margin: 4px; border: 1px solid #939292; border-radius: 5px;}
 .hardyStonkHidden {background-color: #aa6f6f; color:white;}
+/*Test*/
+.buyHint { margin: 4px; white-space: normal; font-weight: bold; display: block; text-align: center; }
+.hardy_stonk_buy_input { padding: 2px; border: 1px solid #b0aaaa; border-radius: 0 4px 4px 0; display: inline; }
+body.dark-mode .hardy_stonk_buy_input {background-color: #000000; color: rgb(255, 255, 255);}
+body:not(.dark-mode) .hardy_amount_max { display: inline; padding: 4px 9px; color: #757373; background: linear-gradient(to bottom, #ffffff 0%, #dddddd 100%); border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #ccc; }
+body.dark-mode .hardy_amount_max {background-color: #5b5a5a; display: inline; padding: 4px 9px; color: #c1bfbf; border-bottom-left-radius: 5px; border-top-left-radius: 5px; border: 1px solid #7d7b7b;}
+.money_to_quant {margin-left: 3px; padding: 4px 8px; border-radius: 5px; background: transparent linear-gradient(180deg, #E5E5E5 0%, #BBBBBB 60%, #999999 100%) 0 0 no-repeat; color: #333; font-size: 14px; font-weight: 700; width: 20px;}
+input[isError='yes'] {background-color: #ecc8c8;}
+body.dark-mode input[isError='yes'] {background-color: #ecc8c8; color: black;}
+input[isError='no'] {background-color: #caeeca;}
+body.dark-mode input[isError='no'] {background-color: #caeeca; color: black;}
+div[class^='manageBlock_'] { padding: 6px 0!important;}
     `);
 })();
