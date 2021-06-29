@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.5
+// @version      0.5.1
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -367,13 +367,19 @@
             let id = node.getAttribute("info").split("_")[1];
             node.setAttribute("isGreen", "no");
             let price = metadata[id].price;
-            if (savedPrefs[id].lowerThan > 0 && savedPrefs[id].lowerThan > price) {
-                node.setAttribute("isGreen", "yes");
-                lowerArray.push(metadata[id].acronym);
-            }
-            if (savedPrefs[id].higherThan > 0 && savedPrefs[id].higherThan < price ) {
-                node.setAttribute("isGreen", "yes");
-                higherArray.push(metadata[id].acronym)
+            if (savedPrefs[id]) {
+                if (savedPrefs[id].lowerThan > 0 && savedPrefs[id].lowerThan > price) {
+                    node.setAttribute("isGreen", "yes");
+                    lowerArray.push(metadata[id].acronym);
+                }
+                if (savedPrefs[id].higherThan > 0 && savedPrefs[id].higherThan < price ) {
+                    node.setAttribute("isGreen", "yes");
+                    higherArray.push(metadata[id].acronym)
+                }
+            } else {
+                savedPrefs[id] = {};
+                savedPrefs[id].higherThan = 0;
+                savedPrefs[id].lowerThan = 0;
             }
             let profit = stockLossObj[id] ? stockLossObj[id]: 0;
             //node.setAttribute("profit", 'h'+profit);
