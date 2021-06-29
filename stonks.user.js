@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.5.1
+// @version      0.5.2
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -17,6 +17,7 @@
 (function() {
     'use strict';
     var darkMode = false;
+    let state = {};
     var metadata = {};
     var portfolioData = {};
     var stockLossObj = {};
@@ -68,6 +69,7 @@
                             document.querySelector("#hardyPortfolioBox").innerHTML = returnHtml();
                         } else {
                             addProfitLossInfo();
+                            changeTitle();
                             document.querySelector(".hardy_stonks_text_info").innerHTML = `You have a total ${stonksTotalVal >= 0?'<span class="stonksUpli">profit</span>':'<span class ="stonksDownli">loss</span>'} of ${formatNumber(stonksTotalVal)}`;
                         }
 
@@ -329,6 +331,8 @@
             if (moneyOnHand !== "hardy") {
                 modifyStockDiv();
             }
+            state.title = "original";
+            changeTitle();
         } else {
             let icon = document.createElement("a");
             icon.setAttribute("role", "button");
@@ -677,6 +681,19 @@
         for (const id in metadata) {
             if (metadata[id].name === name) {
                 return metadata[id].acronym;
+            }
+        }
+    }
+    function changeTitle() {
+        let url = window.location.href;
+        if (url.includes("stockID")) {
+            let id = url.split("stockID=")[1].split("&")[0];
+            document.title = `${metadata[id].acronym}: ${metadata[id].price} | TORN`;
+            state.title = "custom";
+        } else {
+            if (state.title === "custom") {
+                document.title = `Stock Market | TORN`;
+                state.title = "original";
             }
         }
     }
