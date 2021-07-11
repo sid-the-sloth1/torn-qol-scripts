@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.5.3
+// @version      0.5.4
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -200,19 +200,21 @@
         } else if (url.includes("sid=StockMarket&step=getTransactions")) {
             respo.json().then((info) => {
                 if (info.success) {
-                    let uid = init.body.get("stockId");
-                    let index = 0;
-                    for (const transaction of info.transactions) {
-                        if (index !== 0) {
-                            let amount = transaction.amount;
-                            let buyP = transaction.boughtPrice;
-                            let buyTotal = Math.ceil(amount * buyP);
-                            let price = metadata[uid].price;
-                            let total = Math.round(price*amount);
-                            portfolioData[uid].push([uid, transaction.timestamp, metadata[uid].acronym, amount, buyP, buyTotal, price, total, total-buyTotal]);
+                    setTimeout( ()=> {
+                        let uid = init.body.get("stockId");
+                        let transList = document.querySelectorAll("div[class^='transactionsList'] ul[class^='transaction_']");
+                        if (transList.length > 0) {
+                            portfolioData[uid] = [];
+                            for (const trans of transList) {
+                                let amount = parseInt(trans.querySelector("li[class^='shares']").innerText.replace(/,/g, ""));
+                                let buyP = parseFloat(trans.querySelector("li[class^='bought']").innerText.replace(/\$/, "").replace(/,/g, ""));
+                                let buyTotal = Math.ceil(amount * buyP);
+                                let price = metadata[uid].price;
+                                let total = Math.round(price*amount);
+                                portfolioData[uid].push([uid, dateToStamp(trans.querySelector("li[class^='date']").innerText), metadata[uid].acronym, amount, buyP, buyTotal, price, total, total-buyTotal]);
+                            }
                         }
-                        index += 1;
-                    }
+                    }, 700);
                 }
             });
         }
