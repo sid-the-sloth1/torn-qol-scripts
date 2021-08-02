@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.5.4
+// @version      0.5.5
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -54,7 +54,8 @@
                                 block[6] = price;
                                 let total = Math.ceil(amount* price);
                                 block[7] = total;
-                                block[8] = total -block[5];
+                                let fee = (0.1/100)*total;
+                                block[8] = total -block[5]-fee;
                                 if (stockLossObj[id]) {
                                     stockLossObj[id] += block[8];
                                 } else {
@@ -113,7 +114,8 @@
                         for (const transaction of userData.transactions) {
                             let totalBuy = Math.ceil(transaction.amount*transaction.boughtPrice);
                             let totalWorth = Math.floor(transaction.amount *price);
-                            let diff = totalWorth - totalBuy;
+                            let fee = (0.1/100)*totalWorth;
+                            let diff = totalWorth - totalBuy - fee;
                             portfolioData[id].push([id, transaction.timestamp, metadata[id].acronym, transaction.amount, transaction.boughtPrice, totalBuy , price, totalWorth, diff ]);
 
                             if (stockLossObj[id]) {
