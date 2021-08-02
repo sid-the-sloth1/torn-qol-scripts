@@ -54,7 +54,7 @@
                                 block[6] = price;
                                 let total = Math.ceil(amount* price);
                                 block[7] = total;
-                                let fee = (0.1/100)*total;
+                                let fee = Math.round((0.1/100)*total);
                                 block[8] = total -block[5]-fee;
                                 if (stockLossObj[id]) {
                                     stockLossObj[id] += block[8];
@@ -114,7 +114,7 @@
                         for (const transaction of userData.transactions) {
                             let totalBuy = Math.ceil(transaction.amount*transaction.boughtPrice);
                             let totalWorth = Math.floor(transaction.amount *price);
-                            let fee = (0.1/100)*totalWorth;
+                            let fee = Math.round((0.1/100)*totalWorth);
                             let diff = totalWorth - totalBuy - fee;
                             portfolioData[id].push([id, transaction.timestamp, metadata[id].acronym, transaction.amount, transaction.boughtPrice, totalBuy , price, totalWorth, diff ]);
 
