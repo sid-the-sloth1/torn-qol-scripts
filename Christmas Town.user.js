@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.9.6
+// @version      1.9.7
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -270,7 +270,7 @@
         let npcList = document.querySelectorAll(".ct-user.npc");
         if (npcList.length > 0) {
             for (const npc of npcList) {
-                if (npc.innerHTML.includes("santa")) {
+                if (npc.id === "ctUserb88f81d4672322f54a612cfa608afb11") {
                     npc.setAttribute("npcType", "santa");
                 } else {
                     npc.setAttribute("npcType", "other");
