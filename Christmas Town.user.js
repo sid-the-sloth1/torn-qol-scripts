@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      1.9.2
+// @version      1.9.5
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -543,6 +543,7 @@
             if (new Date(GM_getValue("month")).getFullYear() != now.getFullYear()) {
                 let obj = {"items": {}};
                 localStorage.setItem("ctHelperFound", JSON.stringify(obj));
+                GM_setValue("month", Date.now())
             }
         }
     }
