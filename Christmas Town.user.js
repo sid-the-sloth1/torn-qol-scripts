@@ -543,7 +543,7 @@
             if (new Date(GM_getValue("month")).getFullYear() != now.getFullYear()) {
                 let obj = {"items": {}};
                 localStorage.setItem("ctHelperFound", JSON.stringify(obj));
-                GM_setValue("month", Date.now())
+                GM_setValue("month", Date.now());
             }
         }
     }
