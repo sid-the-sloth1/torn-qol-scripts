@@ -1,4 +1,4 @@
-/ ==UserScript==
+// ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
 // @version      1.9.8
