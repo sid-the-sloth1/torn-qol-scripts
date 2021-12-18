@@ -53,14 +53,23 @@
                         if (data.mapData.inventory && settings.spawn === 1) {
                             let obj = {};
                             obj.modifier = 0;
+                            obj.speedModifier = 0;
                             for (const ornament of data.mapData.inventory) {
-                                if (ornament.category == "ornaments" && ornament.modifierType === "itemSpawn") {
-                                    obj.modifier += ornament.modifier;
+                                if (ornament.category == "ornaments") {
+                                    if (ornament.modifierType == 'itemSpawn') {
+                                        obj.modifier += ornament.modifier;
+                                    } else if (ornament.modifierType == 'speed') {
+                                        obj.speedModifier += ornament.modifier;
+                                    } else {
+                                        console.debug('CT: Unknown ornament modifier "' + ornament.modifierType + '"');
+                                    }
                                 }
                             }
                             GM_setValue("spawn", obj.modifier);
+                            GM_setValue("speed", obj.speedModifier);
                             setTimeout(updateSpawnRate, 3000);
                             settings.spawn = 0;
+                            settings.speed = 0;
                         }
                         if (data.mapData.items) {
                             let items = data.mapData.items;
@@ -262,7 +271,7 @@
         if (!document.querySelector(".hardyCTBox")) {
             if (document.querySelector("#christmastownroot div[class^='appCTContainer']")) {
                 let newBox = document.createElement("div");
-                newBox.innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTContent"><br><a href="#/cthelper" class="ctRecordLink">Settings</a><br><br><p class="ctHelperSpawnRate ctHelperSuccess">&nbsp;</p><div class="hardyNearbyItems" style="float: left;"><label>Nearby Items(0)</label><div class="content"></div></div><div class="hardyNearbyChests" style="float:right;"><label>Nearby Chests(0)</label><div class="content"></div></div></div>';
+                newBox.innerHTML = '<div class="hardyCTHeader">Christmas Town Helper</div><div class="hardyCTContent"><br><a href="#/cthelper" class="ctRecordLink">Settings</a><br><br><p class="ctHelperSpawnRate ctHelperSuccess">&nbsp;</p><p class="ctHelperSpeedRate ctHelperSuccess">&nbsp;</p><div class="hardyNearbyItems" style="float: left;"><label>Nearby Items(0)</label><div class="content"></div></div><div class="hardyNearbyChests" style="float:right;"><label>Nearby Chests(0)</label><div class="content"></div></div></div>';
                 newBox.className = 'hardyCTBox';
                 let doc = document.querySelector("#christmastownroot div[class^='appCTContainer']");
                 doc.insertBefore(newBox, doc.firstChild.nextSibling);
@@ -698,10 +707,12 @@
     }
     function updateSpawnRate() {
         let spawn = GM_getValue("spawn");
+        let speed = GM_getValue("speed");
         if (typeof spawn == "undefined" || spawn === null) {
             settings.spawn = 1;
         } else {
             document.querySelector(".ctHelperSpawnRate").innerHTML = `You have a spawn rate bonus of ${spawn}%.`;
+            document.querySelector(".ctHelperSpeedRate").innerHTML = `You have a speed rate bonus of ${speed}%.`;
         }
     }
     function checkVersion() {
@@ -775,5 +786,6 @@ body.dark-mode .ctHelperSuccess { color: #b5bbbb; margin: 5px; font-weight: bold
 label[for='accessibility_helper'] {line-height: 1.6; margin-left: 8px;}
 .hardyCTTypoAnswer {padding: 5px 6px; background-color: #4a9f33; color: white; margin: 5px; border-radius: 5px;}
 .hardyCTTypoAnswer:hover, .hardyCTTypoAnswer:focus {color: white;}
+.ctHelperSpeedRate {text-align: center; font-size: 14px}
 `);
 })();
