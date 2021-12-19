@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      2.2
+// @version      2.3
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -15,7 +15,7 @@
 // ==/UserScript==
 (function() {
     'use strict';
-    let version = "2.0";
+    let version = "2.3";
     // Thanks to xedx for Dark Mode support
     // Thanks Kafia for beep effect
     //Thanks to Ahab and Helcostr for the list of words and all the help.
@@ -135,12 +135,10 @@
                         }
                     }
                 } else if (url.includes("q=miniGameAction")) {
-                    if (body && body.action && body.action === "complete") {
-                        stopGame();
-                        wordFixerStart = false;
-                        hangmanStart = false;
+                    if (body && body.action && body.action === "complete" && typeGameStart) {
                         typeGameStart = false;
                         clearInterval(typoCD);
+                        stopGame();
                     }
                     if (wordFixerStart) {
                         if (data.finished) {
@@ -770,9 +768,7 @@
     function beep() {
         let now = parseInt(Date.now()/1000);
         let diff = now - lastSoundChirp;
-        console.log(diff);
         if (diff >= 60) {
-            console.log("hggghch");
             GM_setValue("lastSound", now);
             lastSoundChirp = now;
             chirp.play();
@@ -806,18 +802,18 @@ table:not([cellpadding]) td {vertical-align: middle;}
 .hardyCTtextBox button { background-color: rgba(240, 60, 17, .91); }
 .hardyCTBox2 button { padding: 8px 5px 8px 5px; border-radius: 4px; color: white; margin: 9px; font-weight: bold;}
 .ctHelperError { color: #ff000091; margin: 5px; }
-.body:not(.dark-mode) .ctHelperSuccess { color: black; margin: 5px; font-weight: bold; font-size: 16px; line-height: 1.3;}
+.body:not(.dark-mode) .ctHelperSuccess { color: #38a333; margin: 5px; font-weight: bold; font-size: 16px; line-height: 1.3;}
 body.dark-mode .ctHelperSuccess { color: #b5bbbb; margin: 5px; font-weight: bold; font-size: 16px; line-height: 1.3;}
 .hardyCTBox2 p { margin: 15px; font-weight: bold; font-family: Helvetica; }
 .hardyNearbyItems, .hardyNearbyChests { padding: 4px; display: inline; }
 .hardyNearbyItems label, .hardyNearbyChests label { font-weight: bold; }
 .hardyCTBox p { margin-top: 9px; font-family: Helvetica; }
-.helcostrDoesntLikeGreenCommas {color: #333;}
+body:not(.dark-mode) .helcostrDoesntLikeGreenCommas {color: #333;}
+body.dark-mode .helcostrDoesntLikeGreenCommas {color: #919191;}
 .hardyCTContent .content {overflow-y: auto; height: 60px; margin-right: 3px; margin-top: 3px;}
-.ctHelperSpawnRate {text-align: center; font-size: 14px}
+.ctHelperSpawnRate, .ctHelperSpeedRate {text-align: center; font-size: 14px}
 label[for='accessibility_helper'] {line-height: 1.6; margin-left: 8px;}
 .hardyCTTypoAnswer {padding: 5px 6px; background-color: #4a9f33; color: white; margin: 5px; border-radius: 5px;}
 .hardyCTTypoAnswer:hover, .hardyCTTypoAnswer:focus {color: white;}
-.ctHelperSpeedRate {text-align: center; font-size: 14px}
 `);
 })();
