@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      2.3.2
+// @version      2.3.3
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -15,7 +15,7 @@
 // ==/UserScript==
 (function() {
     'use strict';
-    let version = "2.3.2";
+    let version = "2.3.3";
     // Thanks to xedx for Dark Mode support
     // Thanks Kafia for beep effect
     //Thanks to Ahab and Helcostr for the list of words and all the help.
@@ -766,6 +766,8 @@
     }
     function initiate() {
         firstRun();
+        let innerWidth = window.innerWidth;
+        mobile = innerWidth <= 600;
         addBox();
         checkVersion();
         applyCSS();
@@ -778,8 +780,6 @@
         } else {
             lastSoundChirp = lastSound;
         }
-        let innerWidth = window.innerWidth;
-        mobile = innerWidth <= 600;
     }
     function startTypo() {
         typoCD = setInterval(()=> {
