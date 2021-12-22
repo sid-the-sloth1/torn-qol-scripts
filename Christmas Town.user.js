@@ -780,7 +780,6 @@
         }
         let innerWidth = window.innerWidth;
         mobile = innerWidth <= 600;
-        console.log(mobile);
     }
     function startTypo() {
         typoCD = setInterval(()=> {
