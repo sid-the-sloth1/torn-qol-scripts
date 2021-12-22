@@ -282,7 +282,7 @@
             if (document.querySelector("#christmastownroot div[class^='appCTContainer']")) {
                 let newBox = document.createElement("div");
                 let pcHTML =
-                `<div class="hardyCTHeader hardyCTShadow">Christmas Town Helper</div>
+                    `<div class="hardyCTHeader hardyCTShadow">Christmas Town Helper</div>
                 <div class="hardyCTContent hardyCTShadow"><br>
                     <div style="display: flex; align-items: flex-start;">
                         <div class="hardyNearbyItems""><label>Nearby Items(0)</label>
@@ -778,10 +778,9 @@
         } else {
             lastSoundChirp = lastSound;
         }
-        let sidebar = document.querySelector("#mainContainer div[class^='sidebar']");
-        if (sidebar.classList.contains("mobile")) {
-            mobile = true;
-        }
+        let innerWidth = window.innerWidth;
+        mobile = innerWidth <= 600;
+        console.log(mobile);
     }
     function startTypo() {
         typoCD = setInterval(()=> {
