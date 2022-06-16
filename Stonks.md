@@ -57,7 +57,7 @@ Click on **Manual Logging** option. It will open an input box paste the log ther
 
 3) Click on File > Make a Copy.
 
-4) Tools > Script Editor.
+4) Extension > App Script
 
 5) Click on Deploy option.
 
