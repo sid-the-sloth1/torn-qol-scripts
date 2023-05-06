@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Stonks
 // @namespace    hardy.stonks.new3
-// @version      0.5.5
+// @version      0.5.6
 // @description  Stonks Helper
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/page.php?sid=stocks*
@@ -33,7 +33,7 @@
     const nativeWebSocket = unsafeWindow.WebSocket;
     unsafeWindow.WebSocket = function(...args){
         const socket = new nativeWebSocket(...args);
-        if (socket.url === "wss://ws-centrifugo.torncity.com/connection/websocket") {
+        if (socket.url === "wss://ws-centrifugo.torn.com/connection/websocket") {
             socket.addEventListener("message", (t) => {
                 let data = JSON.parse(t.data);
                 if (data.result && data.result.channel && data.result.channel == "stockMarket") {
