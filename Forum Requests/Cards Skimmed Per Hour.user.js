@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Card Skimming Rate
 // @namespace    hardy.card.skim.rate
-// @version      0.4
+// @version      0.5
 // @description  Shows the rate of card skimming on Card Skimming Page
 // @author       Father [2131687]
 // @match        https://www.torn.com/loader.php?sid=crimes*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=torn.com
+// @grant        GM_addStyle
 // ==/UserScript==
 
 (function() {
@@ -64,7 +65,7 @@
                         nodesAndSkims[k-1][0].querySelector('div[class*="crimeOptionSection_"]').innerText += " - " + nodesAndSkims[k-1][1] + "/hr, #" + k;
                     }
                     const span = document.createElement("span");
-                    span.style = 'display: block; margin: 5px 0; background-color:white; padding: 6px; text-align: center;';
+                    span.id = "hardySkimTot";
                     span.textContent = totalAverage.toFixed(2) * skimsPerHour.length + " details being collected per hour across " + skimsPerHour.length + " skimmers";
                   document.querySelector('div[class*="firstGroup_"]').appendChild(span);
                 }
@@ -122,4 +123,6 @@
         }
         return (count/hr).toFixed(2);
     }
+    GM_addStyle(`body:not(.dark-mode) #hardySkimTot {display: block; margin: 5px 0; background-color: rgb(242, 242, 242); padding: 6px; text-align: center;}
+body.dark-mode #hardySkimTot {display: block; margin: 5px 0; background-color:rgb(42, 42, 42); padding: 6px; text-align: center;}`);
 })();
