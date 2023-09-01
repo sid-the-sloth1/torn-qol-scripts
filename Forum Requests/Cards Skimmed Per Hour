@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Card Skimming Rate
 // @namespace    hardy.card.skim.rate
-// @version      0.2
+// @version      0.3
 // @description  Shows the rate of card skimming on Card Skimming Page
 // @author       Father [2131687]
 // @match        https://www.torn.com/loader.php?sid=crimes*
@@ -18,11 +18,21 @@
         if (page.includes("/cardskimming")) {
             waitForElement(`div[class^="crimeOptionGroup"]`, 700, 999, "djhadgj").then((element) => {
                 const nodeParent = document.querySelectorAll('div[class^="crimeOptionGroup"]')[1];
+                const installParent = document.querySelectorAll('div[class^="crimeOptionGroup"]')[0];
+                if (installParent) {
+                    const installList = installParent.querySelectorAll('div[class^="crimeOption_"]');
+                    for (const node of installList) {
+                        var installNode = node;
+                        break;
+                    }
+                }
                 if (nodeParent) {
                     const nodeList = nodeParent.querySelectorAll('div[class^="crimeOption_"]');
                     const nodeArray = [];
                     const skimsPerHour = [];
                     const rankings = [];
+                    let totalSkims = 0;
+                    let totalHours = 0;
 
                     for (const node of nodeList) {
                         const timeNode = node.querySelector('div[class*="timeSection_"]');
@@ -30,10 +40,13 @@
                         const hr = convertTimeToHours(str);
                         const countNode = node.querySelector('span[class*="statusCards_"]');
                         const count = countNode? parseInt(countNode.innerText.trim()) : 0;
+                        totalSkims += +count;
+                        totalHours += +hr;
                         nodeArray.push(node)
                         skimsPerHour.push(calculateRate(hr,count))
                     }
                     const nodesAndSkims = []
+
                     for (let j = 0; j < skimsPerHour.length; j++) {
                         let topDog = 0;
                         let record = -1;
@@ -46,9 +59,11 @@
                         nodesAndSkims.push([nodeArray[topDog],record])
                         skimsPerHour[topDog] = -1;
                     }
+                    const totalAverage = totalSkims / totalHours;
                     for (let k = 1; k <= nodesAndSkims.length; k++) {
                         nodesAndSkims[k-1][0].querySelector('div[class*="crimeOptionSection_"]').innerText += " - " + nodesAndSkims[k-1][1] + "/hr, #" + k;
                     }
+                  document.querySelector('div[class*="firstGroup_"]').innerHTML += "<span style='display: block; margin: 5px 0; background-color:white; padding: 6px; text-align: center;'> - " + totalAverage.toFixed(2) + "/hr total</span>";
                 }
             }).catch(error => {
                 console.log(error);
