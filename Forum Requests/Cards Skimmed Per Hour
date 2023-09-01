@@ -65,7 +65,7 @@
                     }
                     const span = document.createElement("span");
                     span.style = 'display: block; margin: 5px 0; background-color:white; padding: 6px; text-align: center;';
-                    span.textContent = totalAverage.toFixed(2) + " /hr total";
+                    span.textContent = totalAverage.toFixed(2) * skimsPerHour.length + " details being collected per hour across " + skimsPerHour.length + " skimmers";
                   document.querySelector('div[class*="firstGroup_"]').appendChild(span);
                 }
             }).catch(error => {
