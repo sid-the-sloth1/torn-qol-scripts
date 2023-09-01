@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Card Skimming Rate
 // @namespace    hardy.card.skim.rate
-// @version      0.1
+// @version      0.2
 // @description  Shows the rate of card skimming on Card Skimming Page
 // @author       Father [2131687]
 // @match        https://www.torn.com/loader.php?sid=crimes*
@@ -20,13 +20,34 @@
                 const nodeParent = document.querySelectorAll('div[class^="crimeOptionGroup"]')[1];
                 if (nodeParent) {
                     const nodeList = nodeParent.querySelectorAll('div[class^="crimeOption_"]');
+                    const nodeArray = [];
+                    const skimsPerHour = [];
+                    const rankings = [];
+
                     for (const node of nodeList) {
                         const timeNode = node.querySelector('div[class*="timeSection_"]');
                         const str = timeNode.innerText.trim();
                         const hr = convertTimeToHours(str);
                         const countNode = node.querySelector('span[class*="statusCards_"]');
                         const count = countNode? parseInt(countNode.innerText.trim()) : 0;
-                        node.querySelector('div[class*="crimeOptionSection_"]').innerText += calculateRate(hr, count);
+                        nodeArray.push(node)
+                        skimsPerHour.push(calculateRate(hr,count))
+                    }
+                    const nodesAndSkims = []
+                    for (let j = 0; j < skimsPerHour.length; j++) {
+                        let topDog = 0;
+                        let record = -1;
+                        for (let i = 0; i < skimsPerHour.length; i++) {
+                            if (skimsPerHour[i] > record) {
+                                topDog = i;
+                                record = skimsPerHour[i];
+                            }
+                        }
+                        nodesAndSkims.push([nodeArray[topDog],record])
+                        skimsPerHour[topDog] = -1;
+                    }
+                    for (let k = 1; k <= nodesAndSkims.length; k++) {
+                        nodesAndSkims[k-1][0].querySelector('div[class*="crimeOptionSection_"]').innerText += " - " + nodesAndSkims[k-1][1] + "/hr, #" + k;
                     }
                 }
             }).catch(error => {
@@ -44,7 +65,7 @@
             const intervalId = setInterval(() => {
                 if (attempts > maxTries){
                     clearInterval(intervalId);
-                    reject(`Element Listener Expired: ${selector}, Reason: Dead coz u didnt cum on time!!!!`);
+                    reject(`Element Listener Expired: ${selector}, Reason: Dead coz u didnt come on time!!!!`);
                 } else if (waitObj[identifier] !== value) {
                     clearInterval(intervalId);
                     reject(`Element Listener Expired: ${selector}, Reason: Dead coz u didnt luv me enough and got another LiStEnEr!!!!`);
@@ -58,28 +79,29 @@
             }, duration);
         });
     }
-    function convertTimeToHours(timeString) {
-        const timeParts = timeString.split(', ');
+    function convertTimeToHours(time) {
+        const timeParts = time.split(', ');
         let totalHours = 0;
         for (const part of timeParts) {
-            const words = part.split(' ');
-            const num = parseInt(words[0]);
-            const unit = words[1];
+            const unitAndValue = part.split(' ');
+            let value = parseInt(unitAndValue[0]);
+            const unit = unitAndValue[1];
             if (unit === 'day' || unit === 'days') {
-                totalHours += num * 24;
+                totalHours += value * 24;
             } else if (unit === 'hour' || unit === 'hours') {
-                totalHours += num;
+                totalHours += value;
             } else if (unit === 'minute' || unit === 'minutes') {
-                totalHours += num / 60;
+                totalHours += value / 60;
+            } else if (unit === 'second' || unit === 'seconds') {
+                totalHours += value / 3600;
             }
         }
-
-        return totalHours.toFixed(2);
+        return totalHours > 1? totalHours.toFixed(2): 0;
     }
     function calculateRate(hr, count) {
         if (hr == 0 || count == 0) {
-            return "0 skims per hour!!";
+            return 0;
         }
-        return ` (${(count/hr).toFixed(2)} skims per hour!!)`;
+        return (count/hr).toFixed(2);
     }
 })();
