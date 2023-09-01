@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Card Skimming Rate
 // @namespace    hardy.card.skim.rate
-// @version      0.3
+// @version      0.4
 // @description  Shows the rate of card skimming on Card Skimming Page
 // @author       Father [2131687]
 // @match        https://www.torn.com/loader.php?sid=crimes*
@@ -63,7 +63,10 @@
                     for (let k = 1; k <= nodesAndSkims.length; k++) {
                         nodesAndSkims[k-1][0].querySelector('div[class*="crimeOptionSection_"]').innerText += " - " + nodesAndSkims[k-1][1] + "/hr, #" + k;
                     }
-                  document.querySelector('div[class*="firstGroup_"]').innerHTML += "<span style='display: block; margin: 5px 0; background-color:white; padding: 6px; text-align: center;'> - " + totalAverage.toFixed(2) + "/hr total</span>";
+                    const span = document.createElement("span");
+                    span.style = 'display: block; margin: 5px 0; background-color:white; padding: 6px; text-align: center;';
+                    span.textContent = totalAverage.toFixed(2) + " /hr total";
+                  document.querySelector('div[class*="firstGroup_"]').appendChild(span);
                 }
             }).catch(error => {
                 console.log(error);
