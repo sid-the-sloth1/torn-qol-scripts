@@ -10,6 +10,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
+// @updateURL    https://github.com/sid-the-sloth1/torn-qol-scripts/raw/refs/heads/main/Christmas%20Town.user.js
+// @downloadURL  https://github.com/sid-the-sloth1/torn-qol-scripts/raw/refs/heads/main/Christmas%20Town.user.js
 // @connect      script.google.com
 // @connect      script.googleusercontent.com
 // ==/UserScript==
