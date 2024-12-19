@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Christmas Town Helper (Rewrite Beta)
+// @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
 // @version      3.0.1
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
