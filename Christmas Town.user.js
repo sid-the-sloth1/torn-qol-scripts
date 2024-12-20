@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      3.0.1
+// @version      3.0.2
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -18,12 +18,13 @@
 (function () {
     'use strict';
     ////
-    const version = "3.0.1";
+    const version = "3.0.2";
     const waitObj = {};
     const metadata = { "cache": { "spawn_rate": 0, "speed_rate": 0, "hangman": { "list": [], "chars": [], "len": false } }, "settings": { "games": { "wordFix": false } } };
     let saved;
     let cdForTypingGame;
-    const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" } }, "api_ct": "" };
+    const chirp = new Audio("https://www.torn.com/js/chat/sounds/Chirp_1.mp3");
+    const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" }, "chirp_alert_ct": { "name": "Chirp Alert", "def": "no" } }, "api_ct": "" };
 
     const wordList = ["elf", "eve", "fir", "ham", "icy", "ivy", "joy", "pie", "toy", "gift", "gold", "list", "love", "nice", "sled", "star", "wish", "wrap", "xmas", "yule", "angel", "bells", "cider", "elves", "goose", "holly", "jesus", "merry", "myrrh", "party", "skate", "visit", "candle", "creche", "cookie", "eggnog", "family", "frosty", "icicle", "joyful", "manger", "season", "spirit", "tinsel", "turkey", "unwrap", "wonder", "winter", "wreath", "charity", "chimney", "festive", "holiday", "krampus", "mittens", "naughty", "package", "pageant", "rejoice", "rudolph", "scrooge", "snowman", "sweater", "tidings", "firewood", "nativity", "reindeer", "shopping", "snowball", "stocking", "toboggan", "trimming", "vacation", "wise men", "workshop", "yuletide", "chestnuts", "christmas", "fruitcake", "greetings", "mince pie", "mistletoe", "ornaments", "snowflake", "tradition", "candy cane", "decoration", "ice skates", "jack frost", "north pole", "nutcracker", "saint nick", "yule log", "card", "jolly", "hope", "scarf", "candy", "sleigh", "parade", "snowy", "wassail", "blizzard", "noel", "partridge", "give", "carols", "tree", "fireplace", "socks", "lights", "kings", "goodwill", "sugarplum", "bonus", "coal", "snow", "happy", "presents", "pinecone"];
 
@@ -173,6 +174,27 @@
             }, 500);
         }
     }
+    const chirp_sound = {
+        "getLast": function () {
+            const last_chirp = GM_getValue("last_chirp", 0);
+            metadata.cache.last_chirp = last_chirp;
+        },
+        "setLast": function () {
+            metadata.cache.last_chirp = Math.round(Date.now() / 1000);
+            GM_setValue("last_chirp", metadata.cache.last_chirp);
+        },
+        "play": function () {
+            if (saved.checkbox.chirp_alert_ct === "yes") {
+                const last_chirp = metadata.cache.last_chirp;
+                const now = Math.round(Date.now() / 1000);
+                const diff = now - last_chirp;
+                if (diff >= 60) {
+                    chirp.play();
+                    chirp_sound.setLast();
+                }
+            }
+        }
+    }
     /////
     initiate();
 
@@ -204,6 +226,7 @@
                             ctHelperChangeHTML(itemArray, "hardyNearbyItems", "Nearby Items");
                             ctHelperChangeHTML(chestArray, "hardyNearbyChests", "Nearby Chests");
                             highlightItems();
+                            chirp_sound.play();
                         } else {
                             if (metadata.settings.count == 1) {
                                 document.querySelector(".hardyNearbyChests").innerHTML = '<label>Nearby Chests(0)</label><div class="content"></div>';
@@ -617,6 +640,7 @@
                 }
             }
         }
+        chirp_sound.getLast();
     }
 
     function gamesHelper_css() {
@@ -667,6 +691,10 @@
             const p = createElement("p", {});
             p.innerText = "Games Helper"
             firstgameHelperLabel.parentNode.insertBefore(p, firstgameHelperLabel);
+            const chirpAlertLabel = box.querySelector('input[name="chirp_alert_ct"]').previousSibling;
+            const pElement = createElement("p", {});
+            pElement.innerText = "Miscellaneous";
+            chirpAlertLabel.parentNode.insertBefore(pElement, chirpAlertLabel);
             document.body.insertBefore(box, document.body.firstChild);
             box.querySelectorAll('input[type="color"]').forEach((input) => {
                 input.onchange = function () {
@@ -838,13 +866,13 @@
             function displayItemTable(savedItems, marketItems) {
                 let calc = { totalValue: 0, count: 0 };
                 const rows = Object.entries(savedItems)
-                .map(([id, count]) => {
-                    const item = marketItems[id];
-                    const price = count * item.value;
-                    calc.totalValue += price;
-                    calc.count += count;
+                    .map(([id, count]) => {
+                        const item = marketItems[id];
+                        const price = count * item.value;
+                        calc.totalValue += price;
+                        calc.count += count;
 
-                    return `
+                        return `
                         <tr>
                             <td><img src="/images/items/${id}/medium.png" alt="${item.name}"></td>
                             <td><label>${item.name}</label></td>
@@ -852,8 +880,8 @@
                             <td><label>$${formatNumber(item.value)}</label></td>
                             <td><label>$${formatNumber(price)}</label></td>
                         </tr>`;
-                })
-                .sort((a, b) => b.price - a.price);
+                    })
+                    .sort((a, b) => b.price - a.price);
 
                 document.querySelector('.hardyCTTable').innerHTML = `
                 <table>
@@ -873,6 +901,7 @@
             }
         })
     }
+
     function formatNumber(num) {
         return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
     }
@@ -891,7 +920,7 @@
     const innerWidth = window.innerWidth;
     if (innerWidth <= 600) {
         // General
-    GM_addStyle(`.ct-user-wrap .user-map:before { display: none; }
+        GM_addStyle(`.ct-user-wrap .user-map:before { display: none; }
 .hardyGameBoxContent { background-color: #f2f2f2; border: 1px solid #ccc; border-radius: 0 0 10px 10px; max-height: 150px; margin-bottom: 5px; padding: 10px; }
 .helcostrDoesntLikeGreenCommas { color: black; }
 .hardyCTBox { background-color: #f2f2f2; border: 1px solid #ccc; border-radius: 10px; max-height: 250px; }
@@ -918,8 +947,8 @@ body.dark-mode .ctHelperSuccess { color: lightgreen; }
 body.dark-mode .hardyGameBoxContent { background-color: #333; }
 .hardyCTTypoAnswer { padding: 5px 6px; background-color: #4a9f33; color: white; margin: 5px; border-radius: 5px; }
 .hardyCTTypoAnswer:hover, .hardyCTTypoAnswer:focus { color: white; }`);
-    //Dialog
-    GM_addStyle(`.hardy_modal_dialog { position: fixed; z-index: 10211; padding-top: 6px; left: 0; top: 0; width: 100%; height: 80%; background-color: rgba(0, 0, 0, 0.4); }
+        //Dialog
+        GM_addStyle(`.hardy_modal_dialog { position: fixed; z-index: 10211; padding-top: 6px; left: 0; top: 0; width: 100%; height: 80%; background-color: rgba(0, 0, 0, 0.4); }
 .hardy_modal { position: absolute; top: 50%; left: 50%; height: auto; max-height: 80%; transform: translate(-50%, -50%); background-color: #f2f2f2; max-width: 70%; width: 80%; border-radius: 0.5rem; overflow: auto; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); }
 .hardy_modal_header { background-color: #000; text-align: center; color: #fff; border-radius: 6px 6px 0 0; padding: 5px; width: 100%; }
 .hardy_modal_close { padding: 5px 8px; background-color: #d76767; border-radius: 6px; margin: 5px; border: none; cursor: pointer; font-weight: bold; }
@@ -939,7 +968,7 @@ body.dark-mode .hardy_modal_msg { color: white; }
 .hardy-ct-itemstable { background-color: #3a8fe2; color: white; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 1em; margin-top: 15px; }`);
     } else {
         // General
-    GM_addStyle(`.ct-user-wrap .user-map:before { display: none; }
+        GM_addStyle(`.ct-user-wrap .user-map:before { display: none; }
 .hardyGameBoxContent { background-color: #f2f2f2; border: 1px solid #ccc; border-radius: 0 0 10px 10px; max-height: 150px; margin-bottom: 5px; padding: 10px; }
 .helcostrDoesntLikeGreenCommas { color: black; }
 .hardyCTBox { background-color: #f2f2f2; border: 1px solid #ccc; border-radius: 10px; max-height: 250px; }
@@ -966,8 +995,8 @@ body.dark-mode .ctHelperSuccess { color: lightgreen; }
 body.dark-mode .hardyGameBoxContent { background-color: #333; }
 .hardyCTTypoAnswer { padding: 5px 6px; background-color: #4a9f33; color: white; margin: 5px; border-radius: 5px; }
 .hardyCTTypoAnswer:hover, .hardyCTTypoAnswer:focus { color: white; }`);
-    //Dialog
-    GM_addStyle(`.hardy_modal_dialog { position: fixed; z-index: 10211; padding-top: 6px; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); }
+        //Dialog
+        GM_addStyle(`.hardy_modal_dialog { position: fixed; z-index: 10211; padding-top: 6px; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); }
 .hardy_modal { position: absolute; top: 50%; left: 50%; height: auto; transform: translate(-50%, -50%); background-color: #f2f2f2; width: 40%; border-radius: 0.5rem; overflow: hidden; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); }
 .hardy_modal_header { background-color: #000; text-align: center; color: #fff; border-radius: 6px 6px 0 0; padding: 5px; width: 100%; }
 .hardy_modal_close { padding: 5px 8px; background-color: #d76767; border-radius: 6px; margin: 5px; border: none; cursor: pointer; font-weight: bold; }
