@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      3.0.2
+// @version      3.0.3
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -20,13 +20,13 @@
     placeholder.id = "hardy_ct_placeholder_check";
     placeholder.style.display = "none";
     document.body.appendChild(placeholder);
-    const version = "3.0.2";
+    const version = "3.0.3";
     const waitObj = {};
     const metadata = { "cache": { "spawn_rate": 0, "speed_rate": 0, "hangman": { "list": [], "chars": [], "len": false } }, "settings": { "games": { "wordFix": false } } };
     let saved;
     let cdForTypingGame;
-    const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" } }, "api_ct": "" };
-
+     const chirp = new Audio("https://www.torn.com/js/chat/sounds/Chirp_1.mp3");
+    const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" }, "chirp_alert_ct": { "name": "Chirp Alert", "def": "no" } }, "api_ct": "" };
     const wordList = ["elf", "eve", "fir", "ham", "icy", "ivy", "joy", "pie", "toy", "gift", "gold", "list", "love", "nice", "sled", "star", "wish", "wrap", "xmas", "yule", "angel", "bells", "cider", "elves", "goose", "holly", "jesus", "merry", "myrrh", "party", "skate", "visit", "candle", "creche", "cookie", "eggnog", "family", "frosty", "icicle", "joyful", "manger", "season", "spirit", "tinsel", "turkey", "unwrap", "wonder", "winter", "wreath", "charity", "chimney", "festive", "holiday", "krampus", "mittens", "naughty", "package", "pageant", "rejoice", "rudolph", "scrooge", "snowman", "sweater", "tidings", "firewood", "nativity", "reindeer", "shopping", "snowball", "stocking", "toboggan", "trimming", "vacation", "wise men", "workshop", "yuletide", "chestnuts", "christmas", "fruitcake", "greetings", "mince pie", "mistletoe", "ornaments", "snowflake", "tradition", "candy cane", "decoration", "ice skates", "jack frost", "north pole", "nutcracker", "saint nick", "yule log", "card", "jolly", "hope", "scarf", "candy", "sleigh", "parade", "snowy", "wassail", "blizzard", "noel", "partridge", "give", "carols", "tree", "fireplace", "socks", "lights", "kings", "goodwill", "sugarplum", "bonus", "coal", "snow", "happy", "presents", "pinecone"];
 
     const original_fetch = window.fetch;
@@ -175,6 +175,27 @@
             }, 500);
         }
     }
+    const chirp_sound = {
+        "getLast": function () {
+            const last_chirp = GM_getValue("last_chirp", 0);
+            metadata.cache.last_chirp = last_chirp;
+        },
+        "setLast": function () {
+            metadata.cache.last_chirp = Math.round(Date.now() / 1000);
+            GM_setValue("last_chirp", metadata.cache.last_chirp);
+        },
+        "play": function () {
+            if (saved.checkbox.chirp_alert_ct === "yes") {
+                const last_chirp = metadata.cache.last_chirp;
+                const now = Math.round(Date.now() / 1000);
+                const diff = now - last_chirp;
+                if (diff >= 60) {
+                    chirp.play();
+                    chirp_sound.setLast();
+                }
+            }
+        }
+    }
     /////
     initiate();
 
@@ -206,6 +227,7 @@
                             ctHelperChangeHTML(itemArray, "hardyNearbyItems", "Nearby Items");
                             ctHelperChangeHTML(chestArray, "hardyNearbyChests", "Nearby Chests");
                             highlightItems();
+                            chirp_sound.play();
                         } else {
                             if (metadata.settings.count == 1) {
                                 document.querySelector(".hardyNearbyChests").innerHTML = '<label>Nearby Chests(0)</label><div class="content"></div>';
@@ -619,6 +641,7 @@
                 }
             }
         }
+        chirp_sound.getLast();
     }
 
     function gamesHelper_css() {
@@ -669,6 +692,10 @@
             const p = createElement("p", {});
             p.innerText = "Games Helper"
             firstgameHelperLabel.parentNode.insertBefore(p, firstgameHelperLabel);
+            const chirpAlertLabel = box.querySelector('input[name="chirp_alert_ct"]').previousSibling;
+            const pElement = createElement("p", {});
+            pElement.innerText = "Miscellaneous";
+            chirpAlertLabel.parentNode.insertBefore(pElement, chirpAlertLabel);
             document.body.insertBefore(box, document.body.firstChild);
             box.querySelectorAll('input[type="color"]').forEach((input) => {
                 input.onchange = function () {
