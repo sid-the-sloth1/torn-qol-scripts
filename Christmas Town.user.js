@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      3.0.2
+// @version      3.0.3
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -18,13 +18,14 @@
 (function () {
     'use strict';
     ////
-    const version = "3.0.2";
+    const version = "3.0.3";
     const waitObj = {};
     const metadata = { "cache": { "spawn_rate": 0, "speed_rate": 0, "hangman": { "list": [], "chars": [], "len": false } }, "settings": { "games": { "wordFix": false } } };
     let saved;
     let cdForTypingGame;
+    let cdForGarland;
     const chirp = new Audio("https://www.torn.com/js/chat/sounds/Chirp_1.mp3");
-    const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" }, "chirp_alert_ct": { "name": "Chirp Alert", "def": "no" } }, "api_ct": "" };
+    const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" }, "garland": { "name": "Garland Assemble Helper", "def": "yes" }, "chirp_alert_ct": { "name": "Chirp Alert", "def": "no" } }, "api_ct": "" };
 
     const wordList = ["elf", "eve", "fir", "ham", "icy", "ivy", "joy", "pie", "toy", "gift", "gold", "list", "love", "nice", "sled", "star", "wish", "wrap", "xmas", "yule", "angel", "bells", "cider", "elves", "goose", "holly", "jesus", "merry", "myrrh", "party", "skate", "visit", "candle", "creche", "cookie", "eggnog", "family", "frosty", "icicle", "joyful", "manger", "season", "spirit", "tinsel", "turkey", "unwrap", "wonder", "winter", "wreath", "charity", "chimney", "festive", "holiday", "krampus", "mittens", "naughty", "package", "pageant", "rejoice", "rudolph", "scrooge", "snowman", "sweater", "tidings", "firewood", "nativity", "reindeer", "shopping", "snowball", "stocking", "toboggan", "trimming", "vacation", "wise men", "workshop", "yuletide", "chestnuts", "christmas", "fruitcake", "greetings", "mince pie", "mistletoe", "ornaments", "snowflake", "tradition", "candy cane", "decoration", "ice skates", "jack frost", "north pole", "nutcracker", "saint nick", "yule log", "card", "jolly", "hope", "scarf", "candy", "sleigh", "parade", "snowy", "wassail", "blizzard", "noel", "partridge", "give", "carols", "tree", "fireplace", "socks", "lights", "kings", "goodwill", "sugarplum", "bonus", "coal", "snow", "happy", "presents", "pinecone"];
 
@@ -32,6 +33,8 @@
     const gameHelper = {
         "state": "Inactive",
         "html": "",
+        "garlandAssembleGrid": {},
+        "garlandAssembleGrid_solved": {},
         "start": function () {
             if (!document.querySelector(".ctHelperGameBox")) {
                 const node = document.createElement("div");
@@ -83,6 +86,8 @@
             }
             this.state = "Inactive";
             this.html = "";
+            this.garlandAssembleGrid = {};
+            this.garlandAssembleGrid_solved = {};
         },
         "hangman_charLength": function () {
             const lengthList = metadata.cache.hangman.len;
@@ -172,7 +177,456 @@
                 this.html = array.join("");
                 this.update();
             }, 500);
+        },
+        "garlandAssembleSolve": function (gridData) {
+            const self = this;
+            const ends = getEnds(gridData);
+            const matrix = gridData;
+            const possible_rotations_obj = {};
+            let a = 0;
+            let b = 0;
+            function isEnd(aa, bb) {
+                if (ends.end1_x === aa && ends.end1_y === bb) return [ends.end1_dir, true];
+                if (ends.end2_x === aa && ends.end2_y === bb) return [ends.end2_dir, true];
+                return false;
+            }
+            for (let i = 0; i < 25; i++) {
+                if (!isNullOrOutOfBounds(gridData, a, b)) {
+                    const img = matrix.tails[a][b].imageName;
+                    if (!img.includes("cross")) {
+                        if (img.includes("angle")) {
+                            //top row. x=0
+                            if (a === 0) {
+                                if (!isEnd(a, b)) {
+                                    // check left cell
+                                    if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
+                                        }
+                                    }
+                                    // check right cell
+                                    if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
+                                        }
+                                    }
+                                } else {
+                                    const endDir = isEnd(a, b)[0];
+                                    if (endDir === "t") {
+                                        // check left cell
+                                        if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
+                                            }
+                                        }
+                                        // check right cell
+                                        if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
+                                            }
+                                        }
+                                    } else if (endDir === "l") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
+                                        }
+                                    } else if (endDir === "r") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
+                                        }
+                                    }
+                                }
+                            } else if (a === 4) {
+                                if (!isEnd(a, b)) {
+                                    // check left cell
+                                    if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
+                                        }
+                                    }
+                                    // check right cell
+                                    if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
+                                        }
+                                    }
+                                } else {
+                                    const endDir = isEnd(a, b)[0];
+                                    if (endDir === "b") {
+                                        // check left cell
+                                        if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
+                                            }
+                                        }
+                                        // check right cell
+                                        if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
+                                            }
+                                        }
+                                    } else if (endDir === "l") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
+                                        }
+                                    } else if (endDir === "r") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
+                                        }
+                                    }
+                                }
+                            }
+                            //b = 0. first column
+                            if (b === 0) {
+                                if (!isEnd(a, b)) {
+                                    // check top cell
+                                    if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
+                                        }
+                                    }
+                                    // check bottom cell
+                                    if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
+                                        }
+                                    }
+                                } else {
+                                    const endDir = isEnd(a, b)[0];
+                                    if (endDir === "l") {
+                                        // check top cell
+                                        if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
+                                            }
+                                        }
+                                        // check bottom cell
+                                        if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
+                                            }
+                                        }
+                                    } else if (endDir === "t") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
+                                        }
+                                    } else if (endDir === "b") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
+                                        }
+                                    }
+                                }
+                            } else if (b === 4) {
+                                if (!isEnd(a, b)) {
+                                    // check top cell
+                                    if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
+                                        }
+                                    }
+                                    // check bottom cell
+                                    if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
+                                        }
+                                    }
+                                } else {
+                                    const endDir = isEnd(a, b)[0];
+                                    if (endDir === 'r') {
+                                        // check top cell
+                                        if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
+                                            }
+                                        }
+                                        // check bottom cell
+                                        if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                            if (!possible_rotations_obj[`${a}_${b}`]) {
+                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
+                                            } else {
+                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
+                                            }
+                                        }
+                                    } else if (endDir === "t") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
+                                        }
+                                    } else if (endDir === "b") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
+                                        }
+                                    }
+                                }
+                            }
+                            if (a !== 0 && a !== 4 && b !== 0 && b !== 4) {
+                                // check left and top cells
+                                if (!isNullOrOutOfBounds(gridData, a, b - 1) && !isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
+                                    }
+                                }
+                                // left and bottom cells
+                                if (!isNullOrOutOfBounds(gridData, a, b - 1) && !isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
+                                    }
+                                }
+                                // right and top cells
+                                if (!isNullOrOutOfBounds(gridData, a, b + 1) && !isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
+                                    }
+                                }
+                                // right and bottom cells
+                                if (!isNullOrOutOfBounds(gridData, a, b + 1) && !isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
+                                    }
+                                }
+                            }
+                        } else if (img.includes("straight")) {
+                            if (a === 0 || a === 4) {
+                                if (!isEnd(a, b)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
+                                    }
+                                } else {
+                                    const endDir = isEnd(a, b)[0];
+                                    if (endDir === "b" || endDir === "t") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
+                                        }
+                                    } else {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
+                                        }
+                                    }
+                                }
+                            }
+                            if (b === 0 || b === 4) {
+                                if (!isEnd(a, b)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
+                                    }
+                                } else {
+                                    const endDir = isEnd(a, b)[0];
+                                    if (endDir === "l" || endDir === "r") {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
+                                        }
+                                    } else {
+                                        if (!possible_rotations_obj[`${a}_${b}`]) {
+                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
+                                        } else {
+                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
+                                        }
+                                    }
+                                }
+                            }
+                            if (a !== 0 && a !== 4 && b !== 0 && b !== 4) {
+                                //check top and bottom cells
+                                if (!isNullOrOutOfBounds(gridData, a - 1, b) && !isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
+                                    }
+                                }
+                                // check left and right cells
+                                if (!isNullOrOutOfBounds(gridData, a, b - 1) && !isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                    if (!possible_rotations_obj[`${a}_${b}`]) {
+                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
+                                    } else {
+                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (b === 4) {
+                    b = 0;
+                    a += 1;
+                } else {
+                    b += 1;
+                }
+            }
+
+            for (const key in possible_rotations_obj) {
+                if (possible_rotations_obj[key].length > 1) {
+                    possible_rotations_obj[key] = removeDuplicates(possible_rotations_obj[key]);
+                }
+            }
+            function createADJs() {
+                for (const key in possible_rotations_obj) {
+                    if (possible_rotations_obj[key].length === 1) {
+                        for (const possible_rot of possible_rotations_obj[key]) {
+                            const a = Number(key.split("_")[0]);
+                            const b = Number(key.split("_")[1]);
+                            possible_rot.adj = createLimitationsForAdjacentCells(matrix, a, b, possible_rot.connections);
+                        }
+                    }
+                }
+            }
+            function reducePossibilities() {
+                const newObj = {};
+                for (const key in possible_rotations_obj) {
+                    if (possible_rotations_obj[key].length === 1) {
+                        for (const possible_rot of possible_rotations_obj[key]) {
+                            const a = Number(key.split("_")[0]);
+                            const b = Number(key.split("_")[1]);
+                            for (const dir in possible_rot.adj) {
+                                const adj = possible_rot.adj[dir];
+                                if (adj.length > 0) {
+                                    const adjCell_cords = getAdjacentCords(a, b, dir);
+                                    if (possible_rotations_obj[`${adjCell_cords[0]}_${adjCell_cords[1]}`]) {
+                                        const adjCell = possible_rotations_obj[`${adjCell_cords[0]}_${adjCell_cords[1]}`];
+                                        if (adjCell.length > 1) {
+                                            for (const rot of adjCell) {
+                                                if (adj.includes(rot.rot)) {
+                                                    const n = adjCell_cords[0];
+                                                    const p = adjCell_cords[1]
+                                                    if (!newObj[`${n}_${p}`]) {
+                                                        newObj[`${n}_${p}`] = [{ "rot": rot.rot, "connections": rot.connections }]
+                                                    } else {
+                                                        newObj[`${n}_${p}`].push({ "rot": rot.rot, "connections": rot.connections })
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                for (const key in newObj) {
+                    possible_rotations_obj[key] = newObj[key];
+                }
+            }
+            createADJs();
+            reducePossibilities();
+            createADJs();
+            reducePossibilities();
+            self.html = `Solving...`
+            this.update();
+            function isSolution(combination) {
+                const testCombination = JSON.parse(JSON.stringify(matrix));
+                for (const key in combination) {
+                    const [a, b] = key.split("_").map(Number);
+                    const value = combination[key];
+                    updateProperty(testCombination, a, b, { "rotation": value.rot, "connections": value.connections });
+                }
+                if (garlandIsSolved(testCombination)) {
+                    self.garlandAssembleGrid_solved = testCombination;
+                    const clicks = calculateClicks(self.garlandAssembleGrid, self.garlandAssembleGrid_solved);
+                    self.html = `<label class="ctHelperSuccess">Solve the puzzle by continuously clicking on yellow tiles until they no longer appear yellow.</label> However, click slowly to avoid unnecessary clicks. Do not interact with any other tiles.`;
+                    self.update();
+                    garlandColor(clicks);
+                    return true;
+                }
+                return false;
+            }
+
+
+            function findSolution(keys, index, currentCombination) {
+                if (index === keys.length) {
+                    if (isSolution(currentCombination)) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                const key = keys[index];
+                const values = possible_rotations_obj[key];
+
+                for (const value of values) {
+                    currentCombination[key] = value;
+                    if (findSolution(keys, index + 1, currentCombination)) {
+                        return true;
+                    }
+                    delete currentCombination[key];
+                }
+                return false;
+            }
+
+            function generateCombinations() {
+                const keys = Object.keys(possible_rotations_obj);
+                const currentCombination = {};
+                if (!findSolution(keys, 0, currentCombination)) {
+                    self.html = `No solution found`;
+                    self.update();
+                }
+            }
+
+            generateCombinations();
+
         }
+
+
     }
     const chirp_sound = {
         "getLast": function () {
@@ -304,22 +758,28 @@
                 if (body && body.action && body.action === "start") {
                     if (body.gameType) {
                         const gameType = body.gameType;
-                        if (gameType === "gameWordFixer" && saved.checkbox["word_fixer"] === "yes") {
+                        if (gameType === "gameWordFixer" && saved.checkbox.word_fixer === "yes") {
                             gameHelper.state = "Word Fixer";
                             gameHelper.start();
                             metadata.settings.games.wordFix = data.progress.word;
                             gameHelper.fixWord();
-                        } else if (gameType === "gameHangman" && saved.checkbox["hangman"] === "yes") {
+                        } else if (gameType === "gameHangman" && saved.checkbox.hangman === "yes") {
                             gameHelper.state = "Hangman";
                             gameHelper.start();
                             metadata.cache.hangman.len = data.progress.words;
                             gameHelper.hangman_charLength();
-                        } else if (gameType === "gameTypocalypse" && saved.checkbox["typoGame"] === "yes") {
+                        } else if (gameType === "gameTypocalypse" && saved.checkbox.typoGame === "yes") {
                             if (gameHelper.state !== "Typocalypse") {
                                 gameHelper.state = "Typocalypse";
                                 gameHelper.start();
                                 gameHelper.gameTypocalypseStart();
                             }
+                        } else if (gameType === "gameGarlandAssemble" && saved.checkbox.garland === "yes") {
+                            gameHelper.state = "Garland Assemble";
+                            gameHelper.start();
+                            gameHelper.garlandAssembleGrid = data;
+                            setTimeout(() => gameHelper.garlandAssembleSolve(data)
+                                , 500);
                         }
                     }
                 } else {
@@ -656,6 +1116,9 @@
         if (saved.checkbox["santa_clawz"] === "yes") {
             GM_addStyle(`[class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADuy'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADu4'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADms'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADjr'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADj4'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADSx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADPy'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADOx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADLx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADKq'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAADCS'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAAD03'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAACun'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAACnk'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAACmg'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAACSe'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAACGL'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAAC1U'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAAC0w'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAAByX'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAABsX'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAADAFBMVEUAAAB7g'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAACzVBMVEUAAACTM'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC9FBMVEUAAADlw'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC9FBMVEUAAAD67'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC9FBMVEUAAACnR'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADy2'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADrw'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADlt'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADl5'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADgp'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADgo'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADak'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADKx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAADJn'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAAD9+'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAAD57'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAAD16'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAAClR'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAACdN'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAAC0R'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC91BMVEUAAABxW'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC8VBMVEUAAADKe'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC8VBMVEUAAADKc'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC7lBMVEUAAACXN'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADy1'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADw7'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADvz'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADu6'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADsx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADrx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADr1'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADpv'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADnt'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADe6'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADc2'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADVg'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADOv'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADLh'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADFV'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAADEx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAAD68'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAAD28'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAACup'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAACQN'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAAC0p'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAAC0l'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAABsX'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAABpe'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAAB2V'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC/VBMVEUAAAB/e'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADy1'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADt5'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADj4'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADf0'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADcr'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADal'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADLv'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAADJx'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAAD9+'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAACnl'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAACWM'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAACMh'], [class^='cell'] img[src^='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAMAAABHPGVmAAAC+lBMVEUAAAC+Y'] {display: none;}`);
         }
+        GM_addStyle(`div[ct_garland_clicks="num_1"], div[ct_garland_clicks="num_2"], div[ct_garland_clicks="num_3"] {
+            background-color: yellow;
+            }`);
     }
     function savePrefs() {
         GM_setValue("cthelper_hardy_prefs", JSON.stringify(saved));
@@ -747,6 +1210,258 @@
             }
         }
         return newArray;
+    }
+    //garland assemble utilities
+    function updateProperty(grid, a, b, obj) {
+        const cell = grid.tails[a][b];
+        for (const key in obj) {
+            cell[key] = obj[key];
+        }
+    }
+    function isNullOrOutOfBounds(grid, a, b) {
+        if (a < 0 || a > 4 || b < 0 || b > 4) return true;
+        return grid.tails[a][b] === null;
+    }
+
+    function getAdjacentCell(grid, a, b, direction) {
+        switch (direction) {
+            case "r":
+                if (isNullOrOutOfBounds(grid, a, b + 1)) return null;
+                return grid.tails[a][b + 1];
+            case "l":
+                if (isNullOrOutOfBounds(grid, a, b - 1)) return null;
+                return grid.tails[a][b - 1];
+            case "t":
+                if (isNullOrOutOfBounds(grid, a - 1, b)) return null;
+                return grid.tails[a - 1][b];
+            case "b":
+                if (isNullOrOutOfBounds(grid, a + 1, b)) return null;
+                return grid.tails[a + 1][b];
+        }
+    }
+    function getAdjacentCords(a, b, direction) {
+        switch (direction) {
+            case "r":
+                return [a, b + 1];
+            case "l":
+                return [a, b - 1];
+            case "t":
+                return [a - 1, b];
+            case "b":
+                return [a + 1, b];
+        }
+    }
+    function getOppositeDir(direction) {
+        const dir_obj = { "r": "l", "l": "r", "t": "b", "b": "t" };
+        return dir_obj[direction];
+    }
+    function getEnds(grid) {
+        return { "end1_x": grid.ends[0].position[0], "end1_y": grid.ends[0].position[1], "end1_dir": grid.ends[0].side, "end2_x": grid.ends[1].position[0], "end2_y": grid.ends[1].position[1], "end2_dir": grid.ends[1].side }
+
+    }
+
+    function removeDuplicates(array) {
+        return array.filter((item, index, self) =>
+            index === self.findIndex((t) =>
+                t.rot === item.rot && JSON.stringify(t.connections) === JSON.stringify(item.connections)
+            )
+        );
+    }
+    function getConnection(img, rotation) {
+        let rot = rotation;
+        if (rot >= 360) {
+            while (rot >= 360) {
+                rot -= 360;
+            }
+        }
+        if (img.includes("angle")) {
+            if (rot === 0) {
+                return ["r", "t"];
+            } else if (rot === 90) {
+                return ["b", "r"];
+            } else if (rot === 180) {
+                return ["b", "l"];
+            } else if (rot === 270) {
+                return ["t", "l"];
+            }
+        } else if (img.includes("cross")) {
+            return ["t", "r", "b", "l"];
+        } else if (img.includes("straight")) {
+            if (rot === 0 || rot === 180) {
+                return ["r", "l"];
+            } else if (rot === 90 || rot === 270) {
+                return ["t", "b"];
+            }
+        }
+    }
+    function garlandIsSolved(gridData) {
+        let a = 0;
+        let b = 0;
+        const ends = getEnds(gridData);
+        for (let i = 0; i < 25; i++) {
+            if (!isNullOrOutOfBounds(gridData, a, b)) {
+                const cell = gridData.tails[a][b];
+                const connections = cell.connections;
+                for (const connection of connections) {
+                    const adjacentCell = getAdjacentCell(gridData, a, b, connection);
+                    if (adjacentCell === null) {
+                        if (ends.end1_x === a && ends.end1_y === b) {
+                            if (!connections.includes(ends.end1_dir)) {
+                                return false;
+                            }
+                        } else if (ends.end2_x === a && ends.end2_y === b) {
+                            if (!connections.includes(ends.end2_dir)) {
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        const adjacentCellConnections = adjacentCell.connections;
+                        if (!adjacentCellConnections.includes(getOppositeDir(connection))) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            if (b === 4) {
+                b = 0;
+                a += 1;
+            } else {
+                b += 1;
+            }
+        }
+        ////
+        return true;
+    }
+    function calculateClicks(originalGrid, solutionGrid) {
+        let a = 0;
+        let b = 0;
+        const array = [];
+        for (let i = 0; i < 25; i++) {
+            let clicks = 0;
+            const orig_cell = originalGrid.tails[a][b];
+            const sol_cell = solutionGrid.tails[a][b];
+            if (orig_cell !== null && sol_cell !== null) {
+                const img = orig_cell.imageName;
+                if (!img.includes("cross")) {
+                    const orig_rot = normaliseRotationValue(orig_cell.rotation, img);
+                    const sol_rot = normaliseRotationValue(sol_cell.rotation, img);
+                    if (orig_rot !== sol_rot) {
+                        if (img.includes("straight")) {
+                            clicks += 1;
+                        } else if (img.includes("angle")) {
+                            if (orig_rot > sol_rot) {
+                                clicks += ((360 - orig_rot) / 90) + (sol_rot / 90)
+                            } else {
+                                clicks += (sol_rot - orig_rot) / 90;
+                            }
+                        }
+                    }
+                }
+            }
+            if (clicks > 0) {
+                array.push([a, b, clicks]);
+            }
+            b += 1;
+            if (b === 5) {
+                b = 0;
+                a += 1;
+            }
+        }
+        return array;
+    }
+    function normaliseRotationValue(rotation, img) {
+        let rot = rotation;
+        if (rot >= 360) {
+            while (rot >= 360) {
+                rot -= 360;
+            }
+        }
+        if (img.includes("straight")) {
+            if (rot === 0 || rot === 180) {
+                rot = 0;
+            } else if (rot === 270 || rot === 90) {
+                rot = 90;
+            }
+        } else if (img.includes("angle")) {
+            if (rot === 0) {
+                rot = 360;
+            }
+        }
+        return rot;
+    }
+    function possibleOptionsForAdjacentCell(grid, a, b, direction) {
+        const cell = getAdjacentCell(grid, a, b, direction);
+        if (cell === null) {
+            return null;
+        } else {
+            const img = cell.imageName;
+            const array = [];
+            if (img.includes("angle")) {
+                const possibleAngles = [0, 90, 180, 270];
+                for (const angle of possibleAngles) {
+                    if (getConnection("angle", angle).includes(getOppositeDir(direction))) {
+                        array.push(angle);
+                    }
+                }
+            } else if (img.includes('straight')) {
+                const possibleAngles = [0, 90];
+                for (const angle of possibleAngles) {
+                    if (getConnection("angle", angle).includes(getOppositeDir(direction))) {
+                        array.push(angle);
+                    }
+                }
+            }
+            return array;
+        }
+    }
+    function createLimitationsForAdjacentCells(grid, a, b, connections) {
+        const obj = {};
+        for (const direction of connections) {
+            const array = possibleOptionsForAdjacentCell(grid, a, b, direction);
+            if (array !== null) {
+                obj[direction] = array;
+            } else {
+                obj[direction] = [];
+            }
+        }
+        return obj;
+    }
+    function garlandColor(clicks) {
+        if (!document.querySelector('div[ct_garland_xy_info="x_0_y_0"]')) {
+            clearInterval(cdForGarland);
+            const rows = document.querySelectorAll('div[class^="ctMiniGameWrapper"] div[class^="fixedSizeBoard"] div[class^="tileRow"]');
+            let a = 0;
+            let b = 0;
+            for (const row of rows) {
+                const cols = row.querySelectorAll('div[class^="tile"]');
+                for (const col of cols) {
+                    col.setAttribute("ct_garland_xy_info", `x_${a}_y_${b}`);
+                    b += 1;
+                    if (b === 5) {
+                        b = 0;
+                        a += 1;
+                    }
+                }
+            }
+            for (const click of clicks) {
+                const x = click[0];
+                const y = click[1];
+                const num = click[2];
+                const cell = document.querySelector(`div[ct_garland_xy_info="x_${x}_y_${y}"]`);
+                cell.setAttribute("ct_garland_clicks", `num_${num}`);
+                cell.addEventListener("click", (e) => {
+                    const txt = e.target.getAttribute("ct_garland_clicks");
+                    const num = Number(txt.replace("num_", ""));
+                    const rem = num - 1;
+                    e.target.setAttribute("ct_garland_clicks", `num_${rem}`);
+                })
+            }
+            cdForGarland = setInterval(() => {
+                garlandColor(clicks)
+            }, 2000);
+        }
     }
     function getRecordedPrizes() {
         const storedInfo = localStorage.getItem("ctHelperFound") || '{"items":{}}';
@@ -887,13 +1602,6 @@
                 <table>
                     <tr><th>Image</th><th>Item Name</th><th>Amount</th><th>Price</th><th>Total</th></tr>
                     ${rows.join('')}
-                <tr>
-                  <td><img src="/images/items/315/medium.png"></td>
-                  <td>Allan, Please adḍ details!</td>
-                  <td>0</td>
-                  <td>$0</td>
-                  <td>$0</td>
-                </tr>
                 </table>
                 <p>Total value: $${formatNumber(calc.totalValue)}</p>
                 <p>Number of Items: ${calc.count}</p>
