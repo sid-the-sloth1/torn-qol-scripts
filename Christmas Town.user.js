@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      3.0.3
+// @version      3.0.4
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
     ////
-    const version = "3.0.3";
+    const version = "3.0.4";
     const waitObj = {};
     const metadata = { "cache": { "spawn_rate": 0, "speed_rate": 0, "hangman": { "list": [], "chars": [], "len": false } }, "settings": { "games": { "wordFix": false } } };
     let saved;
@@ -895,7 +895,7 @@
             highlighter_css()
             gamesHelper_css();
             getItemInfoFromSheet()
-            pruneOldFinds();
+            //pruneOldFinds();
         }
     }
     function updateModifierText() {
@@ -1747,7 +1747,7 @@ body.dark-mode .hardyCTBox2 p strong { color: #4ba3ff; }
 body.dark-mode .ctHelperError { color: #ff6f6f; }
 .ctHelperSuccess { color: green; font-weight: bold; }
 body.dark-mode .ctHelperSuccess { color: #6fff6f; }
-button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }
+.hardy_modal_content button, .hardyCTBox2 button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }
 button#hardyCTConfirmDelete { background-color: #dc3545; color: white; }
 body.dark-mode button#hardyCTConfirmDelete { background-color: #b02a37; }
 button#hardyCTNoDelete { background-color: #6c757d; color: white; }
@@ -1756,7 +1756,7 @@ button#hardyctHelperSave { background-color: #28a745; color: white; }
 button#hardyctHelperdelete { background-color: #007bff; color: white; }
 button#go_to_ct { background-color: #327732; color: white; }
 body.dark-mode button#hardyctHelperdelete { background-color: #0056b3; }
-button:hover { opacity: 0.9; }
+hardy_modal_content button:hover, .hardyCTBox2 button:hover { opacity: 0.9; }
 .hardyCTtextBox { margin-top: 10px; padding: 10px; background-color: #fff5f5; border: 1px solid #f5c2c2; border-radius: 5px; color: #d9534f; }
 body.dark-mode .hardyCTtextBox { background-color: #2a1d1d; border: 1px solid #a03a3a; color: #ff6f6f; }
 .ctRecordLink { display: inline-block; margin: 10px 0; text-decoration: none; color: #007bff; font-weight: bold; }
