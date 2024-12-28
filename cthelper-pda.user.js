@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      3.0.5
+// @version      3.0.6
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -20,7 +20,7 @@
     placeholder.id = "hardy_ct_placeholder_check";
     placeholder.style.display = "none";
     document.body.appendChild(placeholder);
-    const version = "3.0.5";
+    const version = "3.0.6";
     const waitObj = {};
     const metadata = { "cache": { "spawn_rate": 0, "speed_rate": 0, "hangman": { "list": [], "chars": [], "len": false } }, "settings": { "games": { "wordFix": false } } };
     let saved;
@@ -29,7 +29,7 @@
     const chirp = new Audio("https://www.torn.com/js/chat/sounds/Chirp_1.mp3");
     const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" }, "garland": { "name": "Garland Assemble Helper", "def": "yes" }, "chirp_alert_ct": { "name": "Chirp Alert", "def": "no" } }, "api_ct": "" };
 
-    const wordList = ["elf", "eve", "fir", "ham", "icy", "ivy", "joy", "pie", "toy", "gift", "gold", "list", "love", "nice", "sled", "star", "wish", "wrap", "xmas", "yule", "angel", "bells", "cider", "elves", "goose", "holly", "jesus", "merry", "myrrh", "party", "skate", "visit", "candle", "creche", "cookie", "eggnog", "family", "frosty", "icicle", "joyful", "manger", "season", "spirit", "tinsel", "turkey", "unwrap", "wonder", "winter", "wreath", "charity", "chimney", "festive", "holiday", "krampus", "mittens", "naughty", "package", "pageant", "rejoice", "rudolph", "scrooge", "snowman", "sweater", "tidings", "firewood", "nativity", "reindeer", "shopping", "snowball", "stocking", "toboggan", "trimming", "vacation", "wise men", "workshop", "yuletide", "chestnuts", "christmas", "fruitcake", "greetings", "mince pie", "mistletoe", "ornaments", "snowflake", "tradition", "candy cane", "decoration", "ice skates", "jack frost", "north pole", "nutcracker", "saint nick", "yule log", "card", "jolly", "hope", "scarf", "candy", "sleigh", "parade", "snowy", "wassail", "blizzard", "noel", "partridge", "give", "carols", "tree", "fireplace", "socks", "lights", "kings", "goodwill", "sugarplum", "bonus", "coal", "snow", "happy", "presents", "pinecone"];
+    const wordList = ["holly and ivy", elf", "eve", "fir", "ham", "icy", "ivy", "joy", "pie", "toy", "gift", "gold", "list", "love", "nice", "sled", "star", "wish", "wrap", "xmas", "yule", "angel", "bells", "cider", "elves", "goose", "holly", "jesus", "merry", "myrrh", "party", "skate", "visit", "candle", "creche", "cookie", "eggnog", "family", "frosty", "icicle", "joyful", "manger", "season", "spirit", "tinsel", "turkey", "unwrap", "wonder", "winter", "wreath", "charity", "chimney", "festive", "holiday", "krampus", "mittens", "naughty", "package", "pageant", "rejoice", "rudolph", "scrooge", "snowman", "sweater", "tidings", "firewood", "nativity", "reindeer", "shopping", "snowball", "stocking", "toboggan", "trimming", "vacation", "wise men", "workshop", "yuletide", "chestnuts", "christmas", "fruitcake", "greetings", "mince pie", "mistletoe", "ornaments", "snowflake", "tradition", "candy cane", "decoration", "ice skates", "jack frost", "north pole", "nutcracker", "saint nick", "yule log", "card", "jolly", "hope", "scarf", "candy", "sleigh", "parade", "snowy", "wassail", "blizzard", "noel", "partridge", "give", "carols", "tree", "fireplace", "socks", "lights", "kings", "goodwill", "sugarplum", "bonus", "coal", "snow", "happy", "presents", "pinecone"];
 
     const original_fetch = window.fetch;
     const gameHelper = {
@@ -94,18 +94,31 @@
         "hangman_charLength": function () {
             const lengthList = metadata.cache.hangman.len;
             if (lengthList.length > 1) {
-                const len_1 = lengthList[0];
-                const len_2 = lengthList[1];
-                const len = len_1 + len_2 + 1;
-                const array = [];
-                for (const word of wordList) {
-                    if (word.length === len) {
-                        if (word.split(" ")[1] && word.split(" ")[0].length == len_1 && word.split(" ")[1].length == len_2) {
+            const numOfWords = lengthList.length;
+            let termLength = 0;
+            for (const length of lengthList) {
+                termLength += length;
+            }
+            termLength += numOfWords - 1;
+            const array = [];
+            for (const word of wordList) {
+                if (word.length === termLength) {
+                    const wordSplit = word.split(" ");
+                    if (wordSplit.length === numOfWords) {
+                        let isValid = true;
+                        for (let index = 0; index < numOfWords; index++) {
+                            if (wordSplit[index].length !== lengthList[index]) {
+                                isValid = false;
+                                break;
+                            }
+                        }
+                        if (isValid) {
                             array.push(word.toUpperCase());
                         }
                     }
                 }
-                metadata.cache.hangman.list = array;
+            }            
+            metadata.cache.hangman.list = array;
             } else {
                 const len = lengthList[0];
                 const array = [];
