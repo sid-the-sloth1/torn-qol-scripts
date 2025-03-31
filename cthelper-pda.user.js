@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      3.0.7
+// @version      3.0.8
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -20,7 +20,7 @@
     placeholder.id = "hardy_ct_placeholder_check";
     placeholder.style.display = "none";
     document.body.appendChild(placeholder);
-    const version = "3.0.7";
+    const version = "3.0.8";
     const waitObj = {};
     const metadata = { "cache": { "spawn_rate": 0, "speed_rate": 0, "hangman": { "list": [], "chars": [], "len": false } }, "settings": { "games": { "wordFix": false } } };
     let saved;
@@ -35,8 +35,6 @@
     const gameHelper = {
         "state": "Inactive",
         "html": "",
-        "garlandAssembleGrid": {},
-        "garlandAssembleGrid_solved": {},
         "start": function () {
             if (!document.querySelector(".ctHelperGameBox")) {
                 const node = document.createElement("div");
@@ -94,31 +92,31 @@
         "hangman_charLength": function () {
             const lengthList = metadata.cache.hangman.len;
             if (lengthList.length > 1) {
-            const numOfWords = lengthList.length;
-            let termLength = 0;
-            for (const length of lengthList) {
-                termLength += length;
-            }
-            termLength += numOfWords - 1;
-            const array = [];
-            for (const word of wordList) {
-                if (word.length === termLength) {
-                    const wordSplit = word.split(" ");
-                    if (wordSplit.length === numOfWords) {
-                        let isValid = true;
-                        for (let index = 0; index < numOfWords; index++) {
-                            if (wordSplit[index].length !== lengthList[index]) {
-                                isValid = false;
-                                break;
+                const numOfWords = lengthList.length;
+                let termLength = 0;
+                for (const length of lengthList) {
+                    termLength += length;
+                }
+                termLength += numOfWords - 1;
+                const array = [];
+                for (const word of wordList) {
+                    if (word.length === termLength) {
+                        const wordSplit = word.split(" ");
+                        if (wordSplit.length === numOfWords) {
+                            let isValid = true;
+                            for (let index = 0; index < numOfWords; index++) {
+                                if (wordSplit[index].length !== lengthList[index]) {
+                                    isValid = false;
+                                    break;
+                                }
                             }
-                        }
-                        if (isValid) {
-                            array.push(word.toUpperCase());
+                            if (isValid) {
+                                array.push(word.toUpperCase());
+                            }
                         }
                     }
                 }
-            }            
-            metadata.cache.hangman.list = array;
+                metadata.cache.hangman.list = array;
             } else {
                 const len = lengthList[0];
                 const array = [];
@@ -194,450 +192,16 @@
             }, 500);
         },
         "garlandAssembleSolve": function (gridData) {
-            const self = this;
-            const ends = getEnds(gridData);
-            const matrix = gridData;
-            const possible_rotations_obj = {};
-            let a = 0;
-            let b = 0;
-            function isEnd(aa, bb) {
-                if (ends.end1_x === aa && ends.end1_y === bb) return [ends.end1_dir, true];
-                if (ends.end2_x === aa && ends.end2_y === bb) return [ends.end2_dir, true];
-                return false;
-            }
-            for (let i = 0; i < 25; i++) {
-                if (!isNullOrOutOfBounds(gridData, a, b)) {
-                    const img = matrix.tails[a][b].imageName;
-                    if (!img.includes("cross")) {
-                        if (img.includes("angle")) {
-                            //top row. x=0
-                            if (a === 0) {
-                                if (!isEnd(a, b)) {
-                                    // check left cell
-                                    if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
-                                        }
-                                    }
-                                    // check right cell
-                                    if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
-                                        }
-                                    }
-                                } else {
-                                    const endDir = isEnd(a, b)[0];
-                                    if (endDir === "t") {
-                                        // check left cell
-                                        if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
-                                            }
-                                        }
-                                        // check right cell
-                                        if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
-                                            }
-                                        }
-                                    } else if (endDir === "l") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
-                                        }
-                                    } else if (endDir === "r") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
-                                        }
-                                    }
-                                }
-                            } else if (a === 4) {
-                                if (!isEnd(a, b)) {
-                                    // check left cell
-                                    if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
-                                        }
-                                    }
-                                    // check right cell
-                                    if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
-                                        }
-                                    }
-                                } else {
-                                    const endDir = isEnd(a, b)[0];
-                                    if (endDir === "b") {
-                                        // check left cell
-                                        if (!isNullOrOutOfBounds(gridData, a, b - 1)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
-                                            }
-                                        }
-                                        // check right cell
-                                        if (!isNullOrOutOfBounds(gridData, a, b + 1)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
-                                            }
-                                        }
-                                    } else if (endDir === "l") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
-                                        }
-                                    } else if (endDir === "r") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
-                                        }
-                                    }
-                                }
-                            }
-                            //b = 0. first column
-                            if (b === 0) {
-                                if (!isEnd(a, b)) {
-                                    // check top cell
-                                    if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
-                                        }
-                                    }
-                                    // check bottom cell
-                                    if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
-                                        }
-                                    }
-                                } else {
-                                    const endDir = isEnd(a, b)[0];
-                                    if (endDir === "l") {
-                                        // check top cell
-                                        if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
-                                            }
-                                        }
-                                        // check bottom cell
-                                        if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
-                                            }
-                                        }
-                                    } else if (endDir === "t") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
-                                        }
-                                    } else if (endDir === "b") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
-                                        }
-                                    }
-                                }
-                            } else if (b === 4) {
-                                if (!isEnd(a, b)) {
-                                    // check top cell
-                                    if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
-                                        }
-                                    }
-                                    // check bottom cell
-                                    if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
-                                        }
-                                    }
-                                } else {
-                                    const endDir = isEnd(a, b)[0];
-                                    if (endDir === 'r') {
-                                        // check top cell
-                                        if (!isNullOrOutOfBounds(gridData, a - 1, b)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
-                                            }
-                                        }
-                                        // check bottom cell
-                                        if (!isNullOrOutOfBounds(gridData, a + 1, b)) {
-                                            if (!possible_rotations_obj[`${a}_${b}`]) {
-                                                possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
-                                            } else {
-                                                possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
-                                            }
-                                        }
-                                    } else if (endDir === "t") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
-                                        }
-                                    } else if (endDir === "b") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
-                                        }
-                                    }
-                                }
-                            }
-                            if (a !== 0 && a !== 4 && b !== 0 && b !== 4) {
-                                // check left and top cells
-                                if (!isNullOrOutOfBounds(gridData, a, b - 1) && !isNullOrOutOfBounds(gridData, a - 1, b)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 270, "connections": ["l", "t"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 270, "connections": ["l", "t"] });
-                                    }
-                                }
-                                // left and bottom cells
-                                if (!isNullOrOutOfBounds(gridData, a, b - 1) && !isNullOrOutOfBounds(gridData, a + 1, b)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 180, "connections": ["l", "b"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 180, "connections": ["l", "b"] });
-                                    }
-                                }
-                                // right and top cells
-                                if (!isNullOrOutOfBounds(gridData, a, b + 1) && !isNullOrOutOfBounds(gridData, a - 1, b)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["r", "t"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["r", "t"] });
-                                    }
-                                }
-                                // right and bottom cells
-                                if (!isNullOrOutOfBounds(gridData, a, b + 1) && !isNullOrOutOfBounds(gridData, a + 1, b)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["r", "b"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["r", "b"] });
-                                    }
-                                }
-                            }
-                        } else if (img.includes("straight")) {
-                            if (a === 0 || a === 4) {
-                                if (!isEnd(a, b)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
-                                    }
-                                } else {
-                                    const endDir = isEnd(a, b)[0];
-                                    if (endDir === "b" || endDir === "t") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
-                                        }
-                                    } else {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
-                                        }
-                                    }
-                                }
-                            }
-                            if (b === 0 || b === 4) {
-                                if (!isEnd(a, b)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
-                                    }
-                                } else {
-                                    const endDir = isEnd(a, b)[0];
-                                    if (endDir === "l" || endDir === "r") {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
-                                        }
-                                    } else {
-                                        if (!possible_rotations_obj[`${a}_${b}`]) {
-                                            possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
-                                        } else {
-                                            possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
-                                        }
-                                    }
-                                }
-                            }
-                            if (a !== 0 && a !== 4 && b !== 0 && b !== 4) {
-                                //check top and bottom cells
-                                if (!isNullOrOutOfBounds(gridData, a - 1, b) && !isNullOrOutOfBounds(gridData, a + 1, b)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 90, "connections": ["b", "t"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 90, "connections": ["b", "t"] });
-                                    }
-                                }
-                                // check left and right cells
-                                if (!isNullOrOutOfBounds(gridData, a, b - 1) && !isNullOrOutOfBounds(gridData, a, b + 1)) {
-                                    if (!possible_rotations_obj[`${a}_${b}`]) {
-                                        possible_rotations_obj[`${a}_${b}`] = [{ "rot": 0, "connections": ["l", "r"] }];
-                                    } else {
-                                        possible_rotations_obj[`${a}_${b}`].push({ "rot": 0, "connections": ["l", "r"] });
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (b === 4) {
-                    b = 0;
-                    a += 1;
-                } else {
-                    b += 1;
-                }
-            }
-
-            for (const key in possible_rotations_obj) {
-                if (possible_rotations_obj[key].length > 1) {
-                    possible_rotations_obj[key] = removeDuplicates(possible_rotations_obj[key]);
-                }
-            }
-            function createADJs() {
-                for (const key in possible_rotations_obj) {
-                    if (possible_rotations_obj[key].length === 1) {
-                        for (const possible_rot of possible_rotations_obj[key]) {
-                            const a = Number(key.split("_")[0]);
-                            const b = Number(key.split("_")[1]);
-                            possible_rot.adj = createLimitationsForAdjacentCells(matrix, a, b, possible_rot.connections);
-                        }
-                    }
-                }
-            }
-            function reducePossibilities() {
-                const newObj = {};
-                for (const key in possible_rotations_obj) {
-                    if (possible_rotations_obj[key].length === 1) {
-                        for (const possible_rot of possible_rotations_obj[key]) {
-                            const a = Number(key.split("_")[0]);
-                            const b = Number(key.split("_")[1]);
-                            for (const dir in possible_rot.adj) {
-                                const adj = possible_rot.adj[dir];
-                                if (adj.length > 0) {
-                                    const adjCell_cords = getAdjacentCords(a, b, dir);
-                                    if (possible_rotations_obj[`${adjCell_cords[0]}_${adjCell_cords[1]}`]) {
-                                        const adjCell = possible_rotations_obj[`${adjCell_cords[0]}_${adjCell_cords[1]}`];
-                                        if (adjCell.length > 1) {
-                                            for (const rot of adjCell) {
-                                                if (adj.includes(rot.rot)) {
-                                                    const n = adjCell_cords[0];
-                                                    const p = adjCell_cords[1]
-                                                    if (!newObj[`${n}_${p}`]) {
-                                                        newObj[`${n}_${p}`] = [{ "rot": rot.rot, "connections": rot.connections }]
-                                                    } else {
-                                                        newObj[`${n}_${p}`].push({ "rot": rot.rot, "connections": rot.connections })
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                for (const key in newObj) {
-                    possible_rotations_obj[key] = newObj[key];
-                }
-            }
-            createADJs();
-            reducePossibilities();
-            createADJs();
-            reducePossibilities();
-            self.html = `Solving...`
-            this.update();
-            function isSolution(combination) {
-                const testCombination = JSON.parse(JSON.stringify(matrix));
-                for (const key in combination) {
-                    const [a, b] = key.split("_").map(Number);
-                    const value = combination[key];
-                    updateProperty(testCombination, a, b, { "rotation": value.rot, "connections": value.connections });
-                }
-                if (garlandIsSolved(testCombination)) {
-                    self.garlandAssembleGrid_solved = testCombination;
-                    const clicks = calculateClicks(self.garlandAssembleGrid, self.garlandAssembleGrid_solved);
-                    self.html = `<label class="ctHelperSuccess">Solve the puzzle by continuously clicking on yellow tiles until they no longer appear yellow.</label> However, click slowly to avoid unnecessary clicks. Do not interact with any other tiles.`;
-                    self.update();
+            const instance = new GarlandSolver(gridData);
+            gameHelper.html = `Solving...`
+            gameHelper.update();
+            instance.solve()
+                .then(solution => {
+                    const clicks = calculateClicks(gridData, solution);
                     garlandColor(clicks);
-                    return true;
-                }
-                return false;
-            }
-
-
-            function findSolution(keys, index, currentCombination) {
-                if (index === keys.length) {
-                    if (isSolution(currentCombination)) {
-                        return true;
-                    }
-                    return false;
-                }
-
-                const key = keys[index];
-                const values = possible_rotations_obj[key];
-
-                for (const value of values) {
-                    currentCombination[key] = value;
-                    if (findSolution(keys, index + 1, currentCombination)) {
-                        return true;
-                    }
-                    delete currentCombination[key];
-                }
-                return false;
-            }
-
-            function generateCombinations() {
-                const keys = Object.keys(possible_rotations_obj);
-                const currentCombination = {};
-                if (!findSolution(keys, 0, currentCombination)) {
-                    self.html = `No solution found`;
-                    self.update();
-                }
-            }
-
-            generateCombinations();
+                    gameHelper.html = `<label class="ctHelperSuccess">Solve the puzzle by continuously clicking on yellow tiles until they no longer appear yellow.</label> However, click slowly to avoid unnecessary clicks. Do not interact with any other tiles.`;
+                    gameHelper.update();
+                }).catch(err => console.error("Error:", err));
 
         }
 
@@ -667,7 +231,7 @@
     /////
     initiate();
 
-   window.fetch = async (url, init) => {
+    window.fetch = async (url, init) => {
         const response_ = await original_fetch(url, init)
         const response = response_.clone();
         response.json().then((data) => {
@@ -792,7 +356,6 @@
                         } else if (gameType === "gameGarlandAssemble" && saved.checkbox.garland === "yes") {
                             gameHelper.state = "Garland Assemble";
                             gameHelper.start();
-                            gameHelper.garlandAssembleGrid = data;
                             setTimeout(() => gameHelper.garlandAssembleSolve(data)
                                 , 500);
                         }
@@ -859,7 +422,7 @@
                     setRecordPrizes(savedData);
                 }
             }
-        });
+        }).catch(err => console.log(err));
         return response_;
     }
     ///////////////////functions/////////////////////
@@ -1227,128 +790,7 @@
         return newArray;
     }
     //garland assemble utilities
-    function updateProperty(grid, a, b, obj) {
-        const cell = grid.tails[a][b];
-        for (const key in obj) {
-            cell[key] = obj[key];
-        }
-    }
-    function isNullOrOutOfBounds(grid, a, b) {
-        if (a < 0 || a > 4 || b < 0 || b > 4) return true;
-        return grid.tails[a][b] === null;
-    }
 
-    function getAdjacentCell(grid, a, b, direction) {
-        switch (direction) {
-            case "r":
-                if (isNullOrOutOfBounds(grid, a, b + 1)) return null;
-                return grid.tails[a][b + 1];
-            case "l":
-                if (isNullOrOutOfBounds(grid, a, b - 1)) return null;
-                return grid.tails[a][b - 1];
-            case "t":
-                if (isNullOrOutOfBounds(grid, a - 1, b)) return null;
-                return grid.tails[a - 1][b];
-            case "b":
-                if (isNullOrOutOfBounds(grid, a + 1, b)) return null;
-                return grid.tails[a + 1][b];
-        }
-    }
-    function getAdjacentCords(a, b, direction) {
-        switch (direction) {
-            case "r":
-                return [a, b + 1];
-            case "l":
-                return [a, b - 1];
-            case "t":
-                return [a - 1, b];
-            case "b":
-                return [a + 1, b];
-        }
-    }
-    function getOppositeDir(direction) {
-        const dir_obj = { "r": "l", "l": "r", "t": "b", "b": "t" };
-        return dir_obj[direction];
-    }
-    function getEnds(grid) {
-        return { "end1_x": grid.ends[0].position[0], "end1_y": grid.ends[0].position[1], "end1_dir": grid.ends[0].side, "end2_x": grid.ends[1].position[0], "end2_y": grid.ends[1].position[1], "end2_dir": grid.ends[1].side }
-
-    }
-
-    function removeDuplicates(array) {
-        return array.filter((item, index, self) =>
-            index === self.findIndex((t) =>
-                t.rot === item.rot && JSON.stringify(t.connections) === JSON.stringify(item.connections)
-            )
-        );
-    }
-    function getConnection(img, rotation) {
-        let rot = rotation;
-        if (rot >= 360) {
-            while (rot >= 360) {
-                rot -= 360;
-            }
-        }
-        if (img.includes("angle")) {
-            if (rot === 0) {
-                return ["r", "t"];
-            } else if (rot === 90) {
-                return ["b", "r"];
-            } else if (rot === 180) {
-                return ["b", "l"];
-            } else if (rot === 270) {
-                return ["t", "l"];
-            }
-        } else if (img.includes("cross")) {
-            return ["t", "r", "b", "l"];
-        } else if (img.includes("straight")) {
-            if (rot === 0 || rot === 180) {
-                return ["r", "l"];
-            } else if (rot === 90 || rot === 270) {
-                return ["t", "b"];
-            }
-        }
-    }
-    function garlandIsSolved(gridData) {
-        let a = 0;
-        let b = 0;
-        const ends = getEnds(gridData);
-        for (let i = 0; i < 25; i++) {
-            if (!isNullOrOutOfBounds(gridData, a, b)) {
-                const cell = gridData.tails[a][b];
-                const connections = cell.connections;
-                for (const connection of connections) {
-                    const adjacentCell = getAdjacentCell(gridData, a, b, connection);
-                    if (adjacentCell === null) {
-                        if (ends.end1_x === a && ends.end1_y === b) {
-                            if (!connections.includes(ends.end1_dir)) {
-                                return false;
-                            }
-                        } else if (ends.end2_x === a && ends.end2_y === b) {
-                            if (!connections.includes(ends.end2_dir)) {
-                                return false;
-                            }
-                        } else {
-                            return false;
-                        }
-                    } else {
-                        const adjacentCellConnections = adjacentCell.connections;
-                        if (!adjacentCellConnections.includes(getOppositeDir(connection))) {
-                            return false;
-                        }
-                    }
-                }
-            }
-            if (b === 4) {
-                b = 0;
-                a += 1;
-            } else {
-                b += 1;
-            }
-        }
-        ////
-        return true;
-    }
     function calculateClicks(originalGrid, solutionGrid) {
         let a = 0;
         let b = 0;
@@ -1406,43 +848,7 @@
         }
         return rot;
     }
-    function possibleOptionsForAdjacentCell(grid, a, b, direction) {
-        const cell = getAdjacentCell(grid, a, b, direction);
-        if (cell === null) {
-            return null;
-        } else {
-            const img = cell.imageName;
-            const array = [];
-            if (img.includes("angle")) {
-                const possibleAngles = [0, 90, 180, 270];
-                for (const angle of possibleAngles) {
-                    if (getConnection("angle", angle).includes(getOppositeDir(direction))) {
-                        array.push(angle);
-                    }
-                }
-            } else if (img.includes('straight')) {
-                const possibleAngles = [0, 90];
-                for (const angle of possibleAngles) {
-                    if (getConnection("angle", angle).includes(getOppositeDir(direction))) {
-                        array.push(angle);
-                    }
-                }
-            }
-            return array;
-        }
-    }
-    function createLimitationsForAdjacentCells(grid, a, b, connections) {
-        const obj = {};
-        for (const direction of connections) {
-            const array = possibleOptionsForAdjacentCell(grid, a, b, direction);
-            if (array !== null) {
-                obj[direction] = array;
-            } else {
-                obj[direction] = [];
-            }
-        }
-        return obj;
-    }
+
     function garlandColor(clicks) {
         if (!document.querySelector('div[ct_garland_xy_info="x_0_y_0"]')) {
             clearInterval(cdForGarland);
@@ -1465,13 +871,17 @@
                 const y = click[1];
                 const num = click[2];
                 const cell = document.querySelector(`div[ct_garland_xy_info="x_${x}_y_${y}"]`);
-                cell.setAttribute("ct_garland_clicks", `num_${num}`);
-                cell.addEventListener("click", (e) => {
-                    const txt = e.target.getAttribute("ct_garland_clicks");
-                    const num = Number(txt.replace("num_", ""));
-                    const rem = num - 1;
-                    e.target.setAttribute("ct_garland_clicks", `num_${rem}`);
-                })
+                if (cell) {
+                    cell.setAttribute("ct_garland_clicks", `num_${num}`);
+                    cell.addEventListener("click", (e) => {
+                        const txt = e.target.getAttribute("ct_garland_clicks");
+                        if (txt) {
+                            const num = Number(txt.replace("num_", ""));
+                            const rem = num - 1;
+                            e.target.setAttribute("ct_garland_clicks", `num_${rem}`);
+                        }
+                    })
+                }
             }
             cdForGarland = setInterval(() => {
                 garlandColor(clicks)
@@ -1534,6 +944,15 @@
             wrapper.appendChild(container);
             container.addEventListener('click', handleButtonClick);
             populateItemTable();
+            setTimeout(() => {
+                const table = document.querySelector('#hardyCTTable-items-Found');
+                if (table) {
+                    const instance = new SourTable(table, [0]);    
+                    instance.initiate();
+                    instance.sort(4, "desc");
+                }
+            }, 1000);
+
 
             function handleButtonClick(e) {
                 const { id } = e.target;
@@ -1614,9 +1033,13 @@
                     .sort((a, b) => b.price - a.price);
 
                 document.querySelector('.hardyCTTable').innerHTML = `
-                <table>
+                <table id="hardyCTTable-items-Found">
+                <thead>
                     <tr><th>Image</th><th>Item Name</th><th>Amount</th><th>Price</th><th>Total</th></tr>
+                    </thead>
+                    <tbody>
                     ${rows.join('')}
+                    </tbody>
                 </table>
                 <p>Total value: $${formatNumber(calc.totalValue)}</p>
                 <p>Number of Items: ${calc.count}</p>
@@ -1777,4 +1200,884 @@ body.dark-mode .hardyCTtextBox { background-color: #2a1d1d; border: 1px solid #a
 .ctRecordLink { display: inline-block; margin: 10px 0; text-decoration: none; color: #007bff; font-weight: bold; }
 body.dark-mode .ctRecordLink { color: #4ba3ff; }
 .ctRecordLink:hover { text-decoration: underline; }`);
+class GarlandSolver {
+    #problemGrid;
+    #tempGrid;
+    #possible_rotations_obj;
+    constructor(grid) {
+        try {
+            // Validate grid is an object
+            if (typeof grid !== 'object' || grid === null) {
+                throw new Error('Input must be a valid grid JSON object');
+            }
+
+            // Validate ends array
+            if (!Array.isArray(grid.ends) || grid.ends.length !== 2) {
+                throw new Error('Grid must have exactly 2 ends');
+            }
+
+            // Validate each end
+            grid.ends.forEach((end, index) => {
+                if (!Array.isArray(end.position) || end.position.length !== 2) {
+                    throw new Error(`End ${index} position must be an array of [x,y] coordinates`);
+                }
+                if (!['l', 'r', 't', 'b'].includes(end.side)) {
+                    throw new Error(`End ${index} side must be one of: l, r, t, b`);
+                }
+            });
+
+            // Validate tails structure
+            if (!Array.isArray(grid.tails) || grid.tails.length !== 5) {
+                throw new Error('Grid must have 5 rows in tails array');
+            }
+
+            grid.tails.forEach((row, rowIndex) => {
+                if (!Array.isArray(row) || row.length !== 5) {
+                    throw new Error(`Row ${rowIndex} must have exactly 5 columns`);
+                }
+
+                row.forEach((cell, colIndex) => {
+                    if (cell !== null) {
+                        // Validate cell structure
+                        if (typeof cell !== 'object') {
+                            throw new Error(`Cell at [${rowIndex},${colIndex}] must be an object or null`);
+                        }
+
+                        // Validate required cell properties
+                        const requiredProps = ['imageName', 'rotation', 'connections'];
+                        requiredProps.forEach(prop => {
+                            if (!(prop in cell)) {
+                                throw new Error(`Cell at [${rowIndex},${colIndex}] missing required property: ${prop}`);
+                            }
+                        });
+
+                        // Validate imageName
+                        if (typeof cell.imageName !== 'string') {
+                            throw new Error(`Cell at [${rowIndex},${colIndex}] imageName must be a string`);
+                        }
+
+                        // Validate connections
+                        if (!Array.isArray(cell.connections)) {
+                            throw new Error(`Cell at [${rowIndex},${colIndex}] connections must be an array`);
+                        }
+
+                        cell.connections.forEach(conn => {
+                            if (!['l', 'r', 't', 'b'].includes(conn)) {
+                                throw new Error(`Cell at [${rowIndex},${colIndex}] has invalid connection direction: ${conn}`);
+                            }
+                        });
+                    }
+                });
+            });
+
+
+            this.#problemGrid = grid;
+            this.#possible_rotations_obj = {};
+        } catch (error) {
+            throw new Error(`Invalid grid structure: ${error.message}`);
+        }
+    }
+
+    #getEnds(grid) {
+        return { "end1_x": grid.ends[0].position[0], "end1_y": grid.ends[0].position[1], "end1_dir": grid.ends[0].side, "end2_x": grid.ends[1].position[0], "end2_y": grid.ends[1].position[1], "end2_dir": grid.ends[1].side }
+    }
+    #isEnd(ends, aa, bb) {
+        if (ends.end1_x === aa && ends.end1_y === bb) return [ends.end1_dir, true];
+        if (ends.end2_x === aa && ends.end2_y === bb) return [ends.end2_dir, true];
+        return false;
+    }
+    #isNullOrOutOfBounds(grid, a, b) {
+        if (a < 0 || a > 4 || b < 0 || b > 4) return true;
+        return grid.tails[a][b] === null;
+    }
+    #removeDuplicates(array) {
+        return array.filter((item, index, self) =>
+            index === self.findIndex((t) =>
+                t.rot === item.rot && JSON.stringify(t.connections) === JSON.stringify(item.connections)
+            )
+        )
+    }
+    #getAdjacentCell(grid, a, b, direction) {
+        switch (direction) {
+            case "r":
+                if (this.#isNullOrOutOfBounds(grid, a, b + 1)) return null;
+                return grid.tails[a][b + 1];
+            case "l":
+                if (this.#isNullOrOutOfBounds(grid, a, b - 1)) return null;
+                return grid.tails[a][b - 1];
+            case "t":
+                if (this.#isNullOrOutOfBounds(grid, a - 1, b)) return null;
+                return grid.tails[a - 1][b];
+            case "b":
+                if (this.#isNullOrOutOfBounds(grid, a + 1, b)) return null;
+                return grid.tails[a + 1][b];
+        }
+    }
+    #getOppositeDir(direction) {
+        const dir_obj = { "r": "l", "l": "r", "t": "b", "b": "t" };
+        return dir_obj[direction];
+    }
+    #getAdjacentCords(a, b, direction) {
+        switch (direction) {
+            case "r":
+                return [a, b + 1];
+            case "l":
+                return [a, b - 1];
+            case "t":
+                return [a - 1, b];
+            case "b":
+                return [a + 1, b];
+        }
+    }
+    #isSolved(gridData) {
+        let a = 0;
+        let b = 0;
+        const ends = this.#getEnds(gridData);
+        for (let i = 0; i < 25; i++) {
+            if (!this.#isNullOrOutOfBounds(gridData, a, b)) {
+                const cell = gridData.tails[a][b];
+                const connections = cell.connections;
+                for (const connection of connections) {
+                    const adjacentCell = this.#getAdjacentCell(gridData, a, b, connection);
+                    if (adjacentCell === null) {
+                        if (ends.end1_x === a && ends.end1_y === b) {
+                            if (!connections.includes(ends.end1_dir)) {
+                                return false;
+                            }
+                        } else if (ends.end2_x === a && ends.end2_y === b) {
+                            if (!connections.includes(ends.end2_dir)) {
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        const adjacentCellConnections = adjacentCell.connections;
+                        if (!adjacentCellConnections.includes(this.#getOppositeDir(connection))) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            if (b === 4) {
+                b = 0;
+                a += 1;
+            } else {
+                b += 1;
+            }
+        }
+        ////
+        return true;
+    }
+
+    //////
+    #createPossibleOptions() {
+        const gridData = this.#problemGrid;
+        const ends = this.#getEnds(gridData);
+        const matrix = gridData;
+        this.#possible_rotations_obj = {};
+        let a = 0;
+        let b = 0;
+        const addToPossibleRotations = (a, b, rot, connections) => {
+            if (!this.#possible_rotations_obj[`${a}_${b}`]) {
+                this.#possible_rotations_obj[`${a}_${b}`] = [{ "rot": rot, "connections": connections }];
+            } else {
+                this.#possible_rotations_obj[`${a}_${b}`].push({ "rot": rot, "connections": connections });
+            }
+        };
+
+        ////the big boi loop
+        for (let i = 0; i < 25; i++) {
+            if (!this.#isNullOrOutOfBounds(gridData, a, b)) {
+                const img = matrix.tails[a][b].imageName;
+                if (!img.includes("cross")) {
+                    if (img.includes("angle")) {
+                        //top row. x=0
+                        if (a === 0) {
+                            if (!this.#isEnd(ends, a, b)) {
+                                // check left cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                    addToPossibleRotations(a, b, 180, ["l", "b"]);
+                                }
+                                // check right cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                    addToPossibleRotations(a, b, 90, ["r", "b"]);
+                                }
+                            } else {
+                                const endDir = this.#isEnd(ends, a, b)[0];
+                                if (endDir === "t") {
+                                    // check left cell
+                                    if (!this.#isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                        addToPossibleRotations(a, b, 270, ["l", "t"]);
+                                    }
+                                    // check right cell
+
+                                    if (!this.#isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                        addToPossibleRotations(a, b, 0, ["r", "t"]);
+                                    }
+                                } else if (endDir === "l") {
+                                    addToPossibleRotations(a, b, 180, ["l", "b"]);
+                                } else if (endDir === "r") {
+                                    addToPossibleRotations(a, b, 90, ["r", "b"]);
+                                }
+                            }
+                        } else if (a === 4) {
+                            if (!this.#isEnd(ends, a, b)) {
+                                // check left cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                    addToPossibleRotations(a, b, 270, ["l", "t"]);
+                                }
+                                // check right cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                    addToPossibleRotations(a, b, 0, ["r", "t"]);
+                                }
+                            } else {
+                                const endDir = this.#isEnd(ends, a, b)[0];
+                                if (endDir === "b") {
+                                    // check left cell
+                                    if (!this.#isNullOrOutOfBounds(gridData, a, b - 1)) {
+                                        addToPossibleRotations(a, b, 180, ["l", "b"]);
+                                    }
+                                    // check right cell
+                                    if (!this.#isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                        addToPossibleRotations(a, b, 90, ["r", "b"]);
+                                    }
+                                } else if (endDir === "l") {
+                                    addToPossibleRotations(a, b, 270, ["l", "t"]);
+                                } else if (endDir === "r") {
+                                    addToPossibleRotations(a, b, 0, ["r", "t"]);
+                                }
+                            }
+                        }
+
+                        //b = 0. first column
+                        if (b === 0) {
+                            if (!this.#isEnd(ends, a, b)) {
+                                // check top cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                    addToPossibleRotations(a, b, 0, ["r", "t"]);
+                                }
+                                // check bottom cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                    addToPossibleRotations(a, b, 90, ["r", "b"]);
+                                }
+                            } else {
+                                const endDir = this.#isEnd(ends, a, b)[0];
+                                if (endDir === "l") {
+                                    // check top cell
+                                    if (!this.#isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                        addToPossibleRotations(a, b, 270, ["l", "t"]);
+                                    }
+                                    // check bottom cell
+                                    if (!this.#isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                        addToPossibleRotations(a, b, 180, ["l", "b"]);
+                                    }
+                                } else if (endDir === "t") {
+                                    addToPossibleRotations(a, b, 0, ["r", "t"]);
+                                } else if (endDir === "b") {
+                                    addToPossibleRotations(a, b, 90, ["r", "b"]);
+                                }
+                            }
+                        } else if (b === 4) {
+                            if (!this.#isEnd(ends, a, b)) {
+                                // check top cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                    addToPossibleRotations(a, b, 270, ["l", "t"]);
+                                }
+                                // check bottom cell
+                                if (!this.#isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                    addToPossibleRotations(a, b, 180, ["l", "b"]);
+                                }
+                            } else {
+                                const endDir = this.#isEnd(ends, a, b)[0];
+                                if (endDir === 'r') {
+                                    // check top cell
+                                    if (!this.#isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                        addToPossibleRotations(a, b, 0, ["r", "t"]);
+                                    }
+                                    // check bottom cell
+                                    if (!this.#isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                        addToPossibleRotations(a, b, 90, ["r", "b"]);
+                                    }
+                                } else if (endDir === "t") {
+                                    addToPossibleRotations(a, b, 270, ["l", "t"]);
+                                } else if (endDir === "b") {
+                                    addToPossibleRotations(a, b, 180, ["l", "b"]);
+                                }
+                            }
+                        }
+
+                        if (a !== 0 && a !== 4 && b !== 0 && b !== 4) {
+                            // check left and top cells
+                            if (!this.#isNullOrOutOfBounds(gridData, a, b - 1) && !this.#isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                addToPossibleRotations(a, b, 270, ["l", "t"]);
+                            }
+                            // left and bottom cells
+                            if (!this.#isNullOrOutOfBounds(gridData, a, b - 1) && !this.#isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                addToPossibleRotations(a, b, 180, ["l", "b"]);
+                            }
+                            // right and top cells
+                            if (!this.#isNullOrOutOfBounds(gridData, a, b + 1) && !this.#isNullOrOutOfBounds(gridData, a - 1, b)) {
+                                addToPossibleRotations(a, b, 0, ["r", "t"]);
+                            }
+                            // right and bottom cells
+                            if (!this.#isNullOrOutOfBounds(gridData, a, b + 1) && !this.#isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                addToPossibleRotations(a, b, 90, ["r", "b"]);
+                            }
+                        }
+
+                    } else if (img.includes("straight")) {
+                        if (a === 0 || a === 4) {
+                            if (!this.#isEnd(ends, a, b)) {
+                                addToPossibleRotations(a, b, 0, ["l", "r"]);
+                            } else {
+                                const endDir = this.#isEnd(ends, a, b)[0];
+                                if (endDir === "b" || endDir === "t") {
+                                    addToPossibleRotations(a, b, 90, ["b", "t"]);
+                                } else {
+                                    addToPossibleRotations(a, b, 0, ["l", "r"]);
+                                }
+                            }
+                        }
+                        if (b === 0 || b === 4) {
+                            if (!this.#isEnd(ends, a, b)) {
+                                addToPossibleRotations(a, b, 90, ["b", "t"]);
+                            } else {
+                                const endDir = this.#isEnd(ends, a, b)[0];
+                                if (endDir === "l" || endDir === "r") {
+                                    addToPossibleRotations(a, b, 0, ["l", "r"]);
+                                } else {
+                                    addToPossibleRotations(a, b, 90, ["b", "t"]);
+                                }
+                            }
+                        }
+                        if (a !== 0 && a !== 4 && b !== 0 && b !== 4) {
+                            //check top and bottom cells
+                            if (!this.#isNullOrOutOfBounds(gridData, a - 1, b) && !this.#isNullOrOutOfBounds(gridData, a + 1, b)) {
+                                addToPossibleRotations(a, b, 90, ["b", "t"]);
+                            }
+                            // check left and right cells
+                            if (!this.#isNullOrOutOfBounds(gridData, a, b - 1) && !this.#isNullOrOutOfBounds(gridData, a, b + 1)) {
+                                addToPossibleRotations(a, b, 0, ["l", "r"]);
+                            }
+                        }
+                    }
+                }
+            }
+            if (b === 4) {
+                b = 0;
+                a += 1;
+            } else {
+                b += 1;
+            }
+        }
+        ////
+        for (const key in this.#possible_rotations_obj) {
+            if (this.#possible_rotations_obj[key].length > 1) {
+                this.#possible_rotations_obj[key] = this.#removeDuplicates(this.#possible_rotations_obj[key]);
+            }
+        }
+
+    }
+    #createAdjacents() {
+        for (const key in this.#possible_rotations_obj) {
+            if (this.#possible_rotations_obj[key].length === 1) {
+                for (const possible_rot of this.#possible_rotations_obj[key]) {
+                    const a = Number(key.split("_")[0]);
+                    const b = Number(key.split("_")[1]);
+                    possible_rot.adj = this.#createLimitationsForAdjacentCells(this.#problemGrid, a, b, possible_rot.connections);
+                }
+            }
+        }
+    }
+    #createLimitationsForAdjacentCells(grid, a, b, connections) {
+        const obj = {};
+        for (const direction of connections) {
+            const array = this.#possibleOptionsForAdjacentCell(grid, a, b, direction);
+            if (array !== null) {
+                obj[direction] = array;
+            } else {
+                obj[direction] = [];
+            }
+        }
+        return obj;
+    }
+    #getConnection(img, rotation) {
+        let rot = rotation;
+        if (rot >= 360) {
+            while (rot >= 360) {
+                rot -= 360;
+            }
+        }
+        const connections = [];
+        if (img.includes("angle")) {
+            if (rot === 0) {
+                connections.push("r");
+                connections.push("t");
+            } else if (rot === 90) {
+                connections.push("b");
+                connections.push("r");
+            } else if (rot === 180) {
+                connections.push("b");
+                connections.push("l");
+            } else if (rot === 270) {
+                connections.push("t");
+                connections.push("l");
+            }
+        } else if (img.includes("cross")) {
+            connections.push("t");
+            connections.push("r");
+            connections.push("b");
+            connections.push("l");
+        } else if (img.includes("straight")) {
+            if (rot === 0 || rot === 180) {
+                connections.push("r");
+                connections.push("l");
+            } else if (rot === 90 || rot === 270) {
+                connections.push("t");
+                connections.push("b");
+            }
+        }
+        return connections;
+    }
+    #possibleOptionsForAdjacentCell(grid, a, b, direction) {
+        const cell = this.#getAdjacentCell(grid, a, b, direction);
+        if (cell === null) {
+            return null;
+        } else {
+            const img = cell.imageName;
+            const array = [];
+            if (img.includes("angle")) {
+                const possibleAngles = [0, 90, 180, 270];
+                for (const angle of possibleAngles) {
+                    if (this.#getConnection("angle", angle).includes(this.#getOppositeDir(direction))) {
+                        array.push(angle);
+                    }
+                }
+            } else if (img.includes('straight')) {
+                const possibleAngles = [0, 90];
+                for (const angle of possibleAngles) {
+                    if (this.#getConnection("angle", angle).includes(this.#getOppositeDir(direction))) {
+                        array.push(angle);
+                    }
+                }
+
+            }
+            return array;
+        }
+    }
+    #reducePossibilities() {
+        const newObj = {};
+        for (const key in this.#possible_rotations_obj) {
+            if (this.#possible_rotations_obj[key].length === 1) {
+                for (const possible_rot of this.#possible_rotations_obj[key]) {
+                    const a = Number(key.split("_")[0]);
+                    const b = Number(key.split("_")[1]);
+                    for (const dir in possible_rot.adj) {
+                        const adj = possible_rot.adj[dir];
+                        if (adj.length > 0) {
+                            const adjCell_cords = this.#getAdjacentCords(a, b, dir);
+                            if (this.#possible_rotations_obj[`${adjCell_cords[0]}_${adjCell_cords[1]}`]) {
+                                const adjCell = this.#possible_rotations_obj[`${adjCell_cords[0]}_${adjCell_cords[1]}`];
+                                if (adjCell.length > 1) {
+                                    for (const rot of adjCell) {
+                                        if (adj.includes(rot.rot)) {
+                                            const n = adjCell_cords[0];
+                                            const p = adjCell_cords[1]
+                                            if (!newObj[`${n}_${p}`]) {
+                                                newObj[`${n}_${p}`] = [{ "rot": rot.rot, "connections": rot.connections }]
+                                            } else {
+                                                newObj[`${n}_${p}`].push({ "rot": rot.rot, "connections": rot.connections })
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (const key in newObj) {
+            this.#possible_rotations_obj[key] = newObj[key];
+        }
+    }
+    #createAdjsNreducePossibilities(numOfTimes = 3) {
+        for (let i = 0; i < numOfTimes; i++) {
+            this.#createAdjacents();
+            this.#reducePossibilities();
+        }
+    }
+    #generateCombinations() {
+        const keys = Object.keys(this.#possible_rotations_obj);
+        const currentCombination = {};
+
+        if (!this.#findSolution(keys, 0, currentCombination)) {
+            console.log("No solution found.");
+            return null;
+        } else {
+            return this.#tempGrid;
+        }
+    }
+    #findSolution(keys, index, currentCombination) {
+        if (index === keys.length) {
+            if (this.#isSolution(currentCombination)) {
+                return true;
+            }
+            return false;
+        }
+
+        const key = keys[index];
+        const values = this.#possible_rotations_obj[key];
+
+        for (const value of values) {
+            currentCombination[key] = value;
+
+            if (this.#findSolution(keys, index + 1, currentCombination)) {
+
+                return true;
+            }
+            delete currentCombination[key];
+        }
+        return false;
+    }
+
+    #isSolution(combination) {
+        const testCombination = JSON.parse(JSON.stringify(this.#problemGrid));
+        for (const key in combination) {
+            const [a, b] = key.split("_").map(Number);
+            const value = combination[key];
+            this.#updateProperty(testCombination, a, b, { "rotation": value.rot, "connections": value.connections });
+        }
+        if (this.#isSolved(testCombination)) {
+            this.#tempGrid = testCombination;
+            return true;
+        }
+        return false;
+    }
+    #updateProperty(grid, a, b, obj) {
+        const cell = grid.tails[a][b];
+        for (const key in obj) {
+            cell[key] = obj[key];
+        }
+    }
+    async solve() {
+        console.time("GarlandSolver");
+        return new Promise((resolve, reject) => {
+            try {
+                this.#createPossibleOptions();
+                this.#createAdjsNreducePossibilities(3);
+                const solution = this.#generateCombinations();
+                if (solution) {
+                    console.timeEnd("GarlandSolver");
+                    resolve(solution);
+                } else {
+                    console.timeEnd("GarlandSolver");
+                    reject("No solution found.");
+                }
+            } catch (err) {
+                console.timeEnd("GarlandSolver");
+                reject(err);
+
+            }
+        });
+    }
+}
+/////////////////
+class SourTable {
+    // Private fields
+    #table;
+    #excludedColumns;
+    #keysForAttributes;
+    #customParseFunctions = {};
+    #isEngaged = false;
+    constructor(table, excludedColumns = [], keysForAttributes = {}) {
+      // Validate inputs
+      if (!(table instanceof HTMLElement) || table.tagName !== 'TABLE') {
+        throw new Error("SourTable: Invalid table element. Must be a 'table' element.");
+      }
+      if (!Array.isArray(excludedColumns) || !excludedColumns.every(Number.isInteger)) {
+        throw new Error("SourTable: excludedColumns must be an array of integers.");
+      }
+      if (excludedColumns.some(col => col < 0)) {
+        throw new Error("SourTable: excludedColumns cannot contain negative numbers.");
+      }
+      if (typeof keysForAttributes !== "object" || keysForAttributes === null) {
+        throw new Error("SourTable: keysForAttributes must be an object.");
+      }
+  
+      // Validate keysForAttributes structure
+      for (const key in keysForAttributes) {
+        if (!key.startsWith('col_') || isNaN(parseInt(key.split('_')[1]))) {
+          throw new Error(`SourTable: Invalid key in keysForAttributes. Use 'col_N' format.`);
+        }
+        if (typeof keysForAttributes[key] !== 'string') {
+          throw new Error(`SourTable: Attribute names must be strings.`);
+        }
+      }
+  
+      // Assign to private fields
+      this.#table = table;
+      this.#excludedColumns = excludedColumns;
+      this.#keysForAttributes = keysForAttributes;
+    }
+  
+    // Public API
+    initiate() {
+      if (this.#table.classList.contains("sourtable-initiated")) {
+  
+        throw new Error("SourTable: This table has already been initialized. Disengage the previous instance of this table before initializing a new one.");
+      }
+      if (this.#isEngaged) {
+        throw new Error("This SourTable instance is already engaged. Disengage it properly before initiating a new instance.");
+      }
+      this.#isEngaged = true;
+      this.#resetIndicatorArrows();
+      this.#addListeners();
+      this.#addCSS();
+      this.#table.classList.add("sourtable-initiated");
+  
+    }
+    #removeListeners() {
+      const headers = this.#table.querySelectorAll(".sourtable-header");
+      headers.forEach(th => {
+        // Remove using the bound handler reference
+        th.removeEventListener("click", this.#boundSortClickHandler);
+      });
+    }
+    disengage() {
+      const headerRow = this.#getHeader();
+      this.#removeListeners();
+      const headers = headerRow.querySelectorAll("th.sourtable-header");
+  
+      for (const th of headers) {
+  
+        th.classList.remove("sourtable-header");
+        if (th.hasAttribute("data-sourtable-order")) th.removeAttribute("data-sourtable-order");
+        const arrowsDiv = th.querySelector(".sourtable-arrow-container");
+        if (arrowsDiv) arrowsDiv.remove();
+      }
+      this.#table.classList.remove("sourtable-initiated");
+      this.#isEngaged = false;
+    }
+    #addListeners() {
+      const headers = this.#table.querySelectorAll(".sourtable-header");
+      if (!headers.length) {
+        throw new Error("SourTable: No sortable headers found. Did you call initiate() first?");
+      }
+      this.#removeListeners();
+      headers.forEach(th => {
+        th.addEventListener("click", this.#boundSortClickHandler);
+      });
+    }
+    
+    #boundSortClickHandler = (event) => {
+      this.#sortClickHandler(event)
+    }
+    #sortClickHandler = (event) => {
+      //console.log(event.target)
+  
+      const target = event.target.closest(".sourtable-header");
+      if (!target) return;
+  
+      const colIndex = Number(target.getAttribute("data-sourtable-col-index").split("_")[1]);
+      const order = target.getAttribute("data-sourtable-order") || "asc";
+      const key = this.#keysForAttributes[`col_${colIndex}`] ? `attr=${this.#keysForAttributes[`col_${colIndex}`]}` : "";
+      this.sort(colIndex, order, key)
+    }
+  
+    sort(colIndex, order, key = "") {
+      try {
+        const array = [];
+        let rows = this.#getBody();
+        if (rows.length === 0) {
+          console.warn("No rows to sort.");
+          return;
+        }
+  
+        const isKeyAttr = typeof key === 'string' && key !== '' && key.startsWith('attr=');
+        let keyAttr = "";
+        if (isKeyAttr) {
+          keyAttr = key.split('attr=')[1];
+          if (!keyAttr) {
+            throw new Error("Empty attribute key provided.");
+          }
+        }
+  
+        let rowIndex = 0;
+        for (const row of rows) {
+          const index = `index_${rowIndex}`;
+          row.setAttribute("data-sourtable-row-index", index);
+  
+          const tdList = row.querySelectorAll("td");
+          if (colIndex >= tdList.length) {
+            throw new Error(`Column index ${colIndex} is out of bounds for row ${rowIndex}.`);
+          }
+  
+          const relevantTd = tdList[colIndex];
+  
+          if (isKeyAttr) {
+            const attrVal = relevantTd.getAttribute(keyAttr);
+            if (attrVal === null) {
+              throw new Error(`Attribute '${keyAttr}' not found in column ${colIndex}, row ${rowIndex}.`);
+            }
+  
+            let parsed;
+            if (this.#customParseFunctions[`col_${colIndex}`]) {
+              try {
+                parsed = this.#customParseFunctions[`col_${colIndex}`](attrVal);
+              } catch (parseError) {
+                throw new Error(`Custom parse function for column ${colIndex} failed: ${parseError.message}`);
+              }
+            } else {
+              parsed = this.#parseText(attrVal);
+            }
+            array.push([index, parsed]);
+          } else {
+            const text = relevantTd.innerText;
+            let parsed;
+            if (this.#customParseFunctions[`col_${colIndex}`]) {
+              try {
+                parsed = this.#customParseFunctions[`col_${colIndex}`](text);
+              } catch (parseError) {
+                throw new Error(`Custom parse function for column ${colIndex} failed: ${parseError.message}`);
+              }
+            } else {
+              parsed = this.#parseText(text);
+            }
+            array.push([index, parsed]);
+          }
+          rowIndex += 1;
+        }
+  
+        if (array.length === 0) {
+          console.warn("No sortable data collected.");
+          return;
+        }
+  
+        const firstValue = array[0][1];
+        const isString = typeof firstValue === "string";
+  
+        if (order === "asc") {
+          array.sort(function (a, b) {
+            return isString ? a[1].localeCompare(b[1]) : a[1] - b[1];
+          });
+        } else {
+          array.sort(function (a, b) {
+            return isString ? b[1].localeCompare(a[1]) : b[1] - a[1];
+          });
+        }
+  
+        const tbody = this.#table.querySelector("tbody") || this.#table;
+        const last_element = tbody.querySelector(`tr[data-sourtable-row-index="${array[array.length - 1][0]}"]`);
+        if (!last_element) {
+          throw new Error("Could not find last row element in DOM.");
+        }
+        tbody.appendChild(last_element);
+        array.splice(-1);
+  
+        for (const [index] of array) {
+  
+          const rowElement = tbody.querySelector(`tr[data-sourtable-row-index="${index}"]`);
+          if (!rowElement) {
+            console.warn(`Row with index ${index} not found in DOM.`);
+            continue;
+          }
+          tbody.insertBefore(rowElement, last_element);
+        }
+  
+  
+        const selector = order === "asc" ? "div.sourtable-arrow-up" : "div.sourtable-arrow-down";
+  
+        const target = this.#table.querySelector(`th[data-sourtable-col-index="index_${colIndex}"]`);
+        if (!target) {
+          throw new Error(`Could not find header for column ${colIndex}.`);
+        }
+        this.#resetIndicatorArrows();
+        target.querySelector(selector).classList.add("filled");
+        const newOrder = order === "asc" ? "desc" : "asc";
+        target.setAttribute("data-sourtable-order", newOrder);
+  
+      } catch (error) {
+        console.error(`SourTable.sort failed: ${error.message}`);
+        throw error;
+      }
+    }
+    addCustomParseFunction(colIndex, parseFunction) {
+      if (typeof parseFunction !== 'function') {
+        throw new Error("parseFunction must be a function.");
+      }
+      this.#customParseFunctions[`col_${colIndex}`] = parseFunction;
+    }
+  
+    static get version() {
+      return "1.0.0";
+    }
+  
+    // Private methods
+    #getHeader() {
+      const header = this.#table.querySelector("tr");
+      if (!header) throw new Error("No header row found.");
+      return header;
+    }
+  
+    #getBody() {
+      if (this.#table.querySelector("thead")) {
+        return Array.from(this.#table.querySelectorAll("tbody tr"));
+      } else {
+        const rows = this.#table.querySelectorAll("tr");
+        return rows.length > 1 ? Array.from(rows).slice(1) : [];
+      }
+    }
+  
+    #resetIndicatorArrows() {
+      const headerRow = this.#getHeader();
+      const headers = headerRow.querySelectorAll("th");
+  
+      headers.forEach((th, index) => {
+        if (this.#excludedColumns.includes(index)) return;
+  
+        let arrowsDiv = th.querySelector(".sourtable-arrow-container");
+        if (!arrowsDiv) {
+          th.classList.add("sourtable-header");
+          th.setAttribute("data-sourtable-col-index", `index_${index}`);
+          arrowsDiv = this.#createElement("div", { class: "sourtable-arrow-container" });
+          th.appendChild(arrowsDiv);
+        }
+  
+        arrowsDiv.innerHTML = `<div class=sourtable-arrow-up><svg height=24 viewBox="0 0 24 24"width=24 xmlns=http://www.w3.org/2000/svg><path d="M18.2 13.3L12 7l-6.2 6.3c-.2.2-.3.5-.3.7s.1.5.3.7s.4.3.7.3h11c.3 0 .5-.1.7-.3s.3-.5.3-.7s-.1-.5-.3-.7"/></svg></div><div class=sourtable-arrow-down><svg height=24 viewBox="0 0 24 24"width=24 xmlns=http://www.w3.org/2000/svg><path d="M5.8 9.7L12 16l6.2-6.3c.2-.2.3-.5.3-.7s-.1-.5-.3-.7s-.4-.3-.7-.3h-11c-.3 0-.5.1-.7.3s-.3.4-.3.7s.1.5.3.7"/></svg></div>`;
+        th.setAttribute("data-sourtable-order", "asc");
+      });
+    }
+  
+  
+  
+  
+    #addCSS() {
+      if (document.querySelector("style#sourtable-style")) return;
+  
+      const style = this.#createElement("style", { id: "sourtable-style" });
+      style.textContent = `.sourtable-arrow-container{display:inline-flex;flex-direction:column;margin-left:.3em;vertical-align:middle;height:1em;width:.8em;justify-content:space-between}.sourtable-arrow-down,.sourtable-arrow-up{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}.sourtable-arrow-down svg,.sourtable-arrow-up svg{width:100%;height:100%;fill:currentColor;opacity:.3;max-height:.5em}.sourtable-arrow-down.filled svg,.sourtable-arrow-up.filled svg{opacity:1!important}.sourtable-header{cursor:pointer!important}`;
+      document.head.appendChild(style);
+    }
+  
+    #parseText(text) {
+      if (typeof text !== 'string') return text;
+      const stripped = text.replace(/[$,£]/g, "").replace(/\s/g, '');
+      const float = parseFloat(stripped.endsWith(".") ? stripped.slice(0, -1) : stripped);
+      return isNaN(float) ? text : float;
+    }
+  
+    #createElement(nodeType, attributes = {}) {
+      const element = document.createElement(nodeType);
+      Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+      return element;
+    }
+    isEngaged() {
+      return this.#isEngaged;
+    }
+  }
+///////////////////
 })();
