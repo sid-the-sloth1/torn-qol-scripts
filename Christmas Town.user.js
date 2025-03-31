@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Christmas Town Helper
 // @namespace    hardy.ct.helper
-// @version      3.0.6
+// @version      3.0.7
 // @description  Christmas Town Helper. Highlights Items, Chests, NPCs. And Games Cheat
 // @author       Hardy [2131687]
 // @match        https://www.torn.com/christmas_town.php*
@@ -10,6 +10,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setClipboard
 // @updateURL    https://github.com/sid-the-sloth1/torn-qol-scripts/raw/refs/heads/main/Christmas%20Town.user.js
 // @downloadURL  https://github.com/sid-the-sloth1/torn-qol-scripts/raw/refs/heads/main/Christmas%20Town.user.js
 // @connect      script.google.com
@@ -18,7 +19,7 @@
 (function () {
     'use strict';
 
-    const version = "3.0.6";
+    const version = "3.0.7";
     const waitObj = {};
     const metadata = { "cache": { "spawn_rate": 0, "speed_rate": 0, "hangman": { "list": [], "chars": [], "len": false } }, "settings": { "games": { "wordFix": false } } };
     let saved;
@@ -28,7 +29,6 @@
     const options = { "checkbox": { "items": { "name": "Highlight Items", "def": "yes", "color": "#e4e461" }, "gold_chest": { "name": "Highlight Golden Chests", "def": "yes", "color": "#e4e461" }, "silver_chest": { "name": "Highlight Silver Chests", "def": "yes", "color": "#e4e461" }, "bronze_chest": { "name": "Highlight Bronze Chests", "def": "yes", "color": "#e4e461" }, "combo_chest": { "name": "Highlight Combination Chests", "def": "yes", "color": "#e4e461" }, "chest_keys": { "name": "Highlight Keys", "def": "yes", "color": "#e4e461" }, "highlight_santa": { "name": "Highlight Santa", "def": "yes", "color": "#ff6200" }, "highlight_npc": { "name": "Highlight Other NPCs", "def": "yes", "color": "#ff6200" }, "wreath": { "name": "Christmas Wreath Helper", "def": "yes" }, "snowball_shooter": { "name": "Snowball Shooter Helper", "def": "yes" }, "santa_clawz": { "name": "Santa Clawz Helper", "def": "yes" }, "word_fixer": { "name": "Word Fixer Helper", "def": "yes" }, "hangman": { "name": "Hangman Helper", "def": "yes" }, "typoGame": { "name": "Typocalypse Helper", "def": "yes" }, "garland": { "name": "Garland Assemble Helper", "def": "yes" }, "chirp_alert_ct": { "name": "Chirp Alert", "def": "no" } }, "api_ct": "" };
 
     const wordList = ["holly and ivy", "elf", "eve", "fir", "ham", "icy", "ivy", "joy", "pie", "toy", "gift", "gold", "list", "love", "nice", "sled", "star", "wish", "wrap", "xmas", "yule", "angel", "bells", "cider", "elves", "goose", "holly", "jesus", "merry", "myrrh", "party", "skate", "visit", "candle", "creche", "cookie", "eggnog", "family", "frosty", "icicle", "joyful", "manger", "season", "spirit", "tinsel", "turkey", "unwrap", "wonder", "winter", "wreath", "charity", "chimney", "festive", "holiday", "krampus", "mittens", "naughty", "package", "pageant", "rejoice", "rudolph", "scrooge", "snowman", "sweater", "tidings", "firewood", "nativity", "reindeer", "shopping", "snowball", "stocking", "toboggan", "trimming", "vacation", "wise men", "workshop", "yuletide", "chestnuts", "christmas", "fruitcake", "greetings", "mince pie", "mistletoe", "ornaments", "snowflake", "tradition", "candy cane", "decoration", "ice skates", "jack frost", "north pole", "nutcracker", "saint nick", "yule log", "card", "jolly", "hope", "scarf", "candy", "sleigh", "parade", "snowy", "wassail", "blizzard", "noel", "partridge", "give", "carols", "tree", "fireplace", "socks", "lights", "kings", "goodwill", "sugarplum", "bonus", "coal", "snow", "happy", "presents", "pinecone"];
-
     const original_fetch = unsafeWindow.fetch;
     const gameHelper = {
         "state": "Inactive",
@@ -46,15 +46,22 @@
             if (metadata.settings.games.wordFix) {
                 const jumbled = metadata.settings.games.wordFix;
                 metadata.settings.games.wordFix = false;
-                let wordSolution = "No solution found";
+                let wordSolution = null;
                 for (const word of wordList) {
                     if (sortWord(word) === sortWord(jumbled)) {
                         wordSolution = word.toUpperCase();
                         break;
                     }
                 }
-                this.html = `<label class="ctHelperSuccess">${wordSolution}</label>`;
-                this.update();
+                if (!wordSolution) {
+                    GM_setClipboard(`CT Helper Normal Version: ${version}\nFailed to find a solution for WordFixer game for the word: ${jumbled}`);
+                    wordSolution = `No solution found. The word has been copied to your clipboard. Kindly <a href="https://www.torn.com/messages.php#/p=compose&XID=2131687">mail</a> it to me(<a href="https://www.torn.com/profiles.php?XID=2131687">Father[2131687]</a>), so that I can look further into this issue.`;
+                    this.html = `<label class="ctHelperError">${wordSolution}</label>`;
+                    this.update();
+                } else {
+                    this.html = `<label class="ctHelperSuccess">${wordSolution}</label>`;
+                    this.update();
+                }
             }
         },
         "update": function () {
@@ -199,7 +206,16 @@
                     garlandColor(clicks);
                     gameHelper.html = `<label class="ctHelperSuccess">Solve the puzzle by continuously clicking on yellow tiles until they no longer appear yellow.</label> However, click slowly to avoid unnecessary clicks. Do not interact with any other tiles.`;
                     gameHelper.update();
-                }).catch(err => console.error("Error:", err));
+                }).catch(error => {
+                    const message = error.message;
+                    if (error ===  "No solution found.") {
+                        GM_setClipboard(`CT Helper Normal Version: ${version}\nFailed to find a solution for Garland Assemble game: ${JSON.stringify(gridData)}`);
+                        gameHelper.html = `<label class="ctHelperError">No solution found. The puzzle grid information has been copied to your clipboard. Paste it in a <a href="https://pastebin.com/" target="_blank">Pastebin</a> or any other text pasting site you like and send it to me(<a href="https://www.torn.com/profiles.php?XID=2131687">Father[2131687]</a>) so that I can look further into this issue.</label>`;
+                    } else {
+                        gameHelper.html = `<label class="ctHelperError">Failed to solve the puzzle. The error message is: ${message}  </label>`;
+                    }
+                    gameHelper.update();
+                });
 
         }
 
@@ -945,7 +961,7 @@
             setTimeout(() => {
                 const table = document.querySelector('#hardyCTTable-items-Found');
                 if (table) {
-                    const instance = new SourTable(table, [0]);    
+                    const instance = new SourTable(table, [0]);
                     instance.initiate();
                     instance.sort(4, "desc");
                 }
@@ -1179,8 +1195,7 @@ body.dark-mode .hardyCTBox2 p, body.dark-mode .hardyCTBox2 td { color: #f0f0f0; 
 .hardyCTBox2 p strong { color: #007bff; font-weight: bold; }
 body.dark-mode .hardyCTBox2 p strong { color: #4ba3ff; }
 .hardyCTTableBox { margin-top: 20px; }
-.ctHelperError { color: red; font-weight: bold; }
-body.dark-mode .ctHelperError { color: #ff6f6f; }
+.ctHelperError a{text-decoration:none;color:#5c5cc6}body.dark-mode .ctHelperError a{color:#a5a5e8}.ctHelperError{color:red;font-weight:700}body.dark-mode .ctHelperError{color:#f79696}
 .ctHelperSuccess { color: green; font-weight: bold; }
 body.dark-mode .ctHelperSuccess { color: #6fff6f; }
 .hardy_modal_content button, .hardyCTBox2 button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }
@@ -1793,292 +1808,292 @@ body.dark-mode .ctRecordLink { color: #4ba3ff; }
         #customParseFunctions = {};
         #isEngaged = false;
         constructor(table, excludedColumns = [], keysForAttributes = {}) {
-          // Validate inputs
-          if (!(table instanceof HTMLElement) || table.tagName !== 'TABLE') {
-            throw new Error("SourTable: Invalid table element. Must be a 'table' element.");
-          }
-          if (!Array.isArray(excludedColumns) || !excludedColumns.every(Number.isInteger)) {
-            throw new Error("SourTable: excludedColumns must be an array of integers.");
-          }
-          if (excludedColumns.some(col => col < 0)) {
-            throw new Error("SourTable: excludedColumns cannot contain negative numbers.");
-          }
-          if (typeof keysForAttributes !== "object" || keysForAttributes === null) {
-            throw new Error("SourTable: keysForAttributes must be an object.");
-          }
-      
-          // Validate keysForAttributes structure
-          for (const key in keysForAttributes) {
-            if (!key.startsWith('col_') || isNaN(parseInt(key.split('_')[1]))) {
-              throw new Error(`SourTable: Invalid key in keysForAttributes. Use 'col_N' format.`);
+            // Validate inputs
+            if (!(table instanceof HTMLElement) || table.tagName !== 'TABLE') {
+                throw new Error("SourTable: Invalid table element. Must be a 'table' element.");
             }
-            if (typeof keysForAttributes[key] !== 'string') {
-              throw new Error(`SourTable: Attribute names must be strings.`);
+            if (!Array.isArray(excludedColumns) || !excludedColumns.every(Number.isInteger)) {
+                throw new Error("SourTable: excludedColumns must be an array of integers.");
             }
-          }
-      
-          // Assign to private fields
-          this.#table = table;
-          this.#excludedColumns = excludedColumns;
-          this.#keysForAttributes = keysForAttributes;
+            if (excludedColumns.some(col => col < 0)) {
+                throw new Error("SourTable: excludedColumns cannot contain negative numbers.");
+            }
+            if (typeof keysForAttributes !== "object" || keysForAttributes === null) {
+                throw new Error("SourTable: keysForAttributes must be an object.");
+            }
+
+            // Validate keysForAttributes structure
+            for (const key in keysForAttributes) {
+                if (!key.startsWith('col_') || isNaN(parseInt(key.split('_')[1]))) {
+                    throw new Error(`SourTable: Invalid key in keysForAttributes. Use 'col_N' format.`);
+                }
+                if (typeof keysForAttributes[key] !== 'string') {
+                    throw new Error(`SourTable: Attribute names must be strings.`);
+                }
+            }
+
+            // Assign to private fields
+            this.#table = table;
+            this.#excludedColumns = excludedColumns;
+            this.#keysForAttributes = keysForAttributes;
         }
-      
+
         // Public API
         initiate() {
-          if (this.#table.classList.contains("sourtable-initiated")) {
-      
-            throw new Error("SourTable: This table has already been initialized. Disengage the previous instance of this table before initializing a new one.");
-          }
-          if (this.#isEngaged) {
-            throw new Error("This SourTable instance is already engaged. Disengage it properly before initiating a new instance.");
-          }
-          this.#isEngaged = true;
-          this.#resetIndicatorArrows();
-          this.#addListeners();
-          this.#addCSS();
-          this.#table.classList.add("sourtable-initiated");
-      
+            if (this.#table.classList.contains("sourtable-initiated")) {
+
+                throw new Error("SourTable: This table has already been initialized. Disengage the previous instance of this table before initializing a new one.");
+            }
+            if (this.#isEngaged) {
+                throw new Error("This SourTable instance is already engaged. Disengage it properly before initiating a new instance.");
+            }
+            this.#isEngaged = true;
+            this.#resetIndicatorArrows();
+            this.#addListeners();
+            this.#addCSS();
+            this.#table.classList.add("sourtable-initiated");
+
         }
         #removeListeners() {
-          const headers = this.#table.querySelectorAll(".sourtable-header");
-          headers.forEach(th => {
-            // Remove using the bound handler reference
-            th.removeEventListener("click", this.#boundSortClickHandler);
-          });
+            const headers = this.#table.querySelectorAll(".sourtable-header");
+            headers.forEach(th => {
+                // Remove using the bound handler reference
+                th.removeEventListener("click", this.#boundSortClickHandler);
+            });
         }
         disengage() {
-          const headerRow = this.#getHeader();
-          this.#removeListeners();
-          const headers = headerRow.querySelectorAll("th.sourtable-header");
-      
-          for (const th of headers) {
-      
-            th.classList.remove("sourtable-header");
-            if (th.hasAttribute("data-sourtable-order")) th.removeAttribute("data-sourtable-order");
-            const arrowsDiv = th.querySelector(".sourtable-arrow-container");
-            if (arrowsDiv) arrowsDiv.remove();
-          }
-          this.#table.classList.remove("sourtable-initiated");
-          this.#isEngaged = false;
+            const headerRow = this.#getHeader();
+            this.#removeListeners();
+            const headers = headerRow.querySelectorAll("th.sourtable-header");
+
+            for (const th of headers) {
+
+                th.classList.remove("sourtable-header");
+                if (th.hasAttribute("data-sourtable-order")) th.removeAttribute("data-sourtable-order");
+                const arrowsDiv = th.querySelector(".sourtable-arrow-container");
+                if (arrowsDiv) arrowsDiv.remove();
+            }
+            this.#table.classList.remove("sourtable-initiated");
+            this.#isEngaged = false;
         }
         #addListeners() {
-          const headers = this.#table.querySelectorAll(".sourtable-header");
-          if (!headers.length) {
-            throw new Error("SourTable: No sortable headers found. Did you call initiate() first?");
-          }
-          this.#removeListeners();
-          headers.forEach(th => {
-            th.addEventListener("click", this.#boundSortClickHandler);
-          });
+            const headers = this.#table.querySelectorAll(".sourtable-header");
+            if (!headers.length) {
+                throw new Error("SourTable: No sortable headers found. Did you call initiate() first?");
+            }
+            this.#removeListeners();
+            headers.forEach(th => {
+                th.addEventListener("click", this.#boundSortClickHandler);
+            });
         }
-        
+
         #boundSortClickHandler = (event) => {
-          this.#sortClickHandler(event)
+            this.#sortClickHandler(event)
         }
         #sortClickHandler = (event) => {
-          //console.log(event.target)
-      
-          const target = event.target.closest(".sourtable-header");
-          if (!target) return;
-      
-          const colIndex = Number(target.getAttribute("data-sourtable-col-index").split("_")[1]);
-          const order = target.getAttribute("data-sourtable-order") || "asc";
-          const key = this.#keysForAttributes[`col_${colIndex}`] ? `attr=${this.#keysForAttributes[`col_${colIndex}`]}` : "";
-          this.sort(colIndex, order, key)
+            //console.log(event.target)
+
+            const target = event.target.closest(".sourtable-header");
+            if (!target) return;
+
+            const colIndex = Number(target.getAttribute("data-sourtable-col-index").split("_")[1]);
+            const order = target.getAttribute("data-sourtable-order") || "asc";
+            const key = this.#keysForAttributes[`col_${colIndex}`] ? `attr=${this.#keysForAttributes[`col_${colIndex}`]}` : "";
+            this.sort(colIndex, order, key)
         }
-      
+
         sort(colIndex, order, key = "") {
-          try {
-            const array = [];
-            let rows = this.#getBody();
-            if (rows.length === 0) {
-              console.warn("No rows to sort.");
-              return;
-            }
-      
-            const isKeyAttr = typeof key === 'string' && key !== '' && key.startsWith('attr=');
-            let keyAttr = "";
-            if (isKeyAttr) {
-              keyAttr = key.split('attr=')[1];
-              if (!keyAttr) {
-                throw new Error("Empty attribute key provided.");
-              }
-            }
-      
-            let rowIndex = 0;
-            for (const row of rows) {
-              const index = `index_${rowIndex}`;
-              row.setAttribute("data-sourtable-row-index", index);
-      
-              const tdList = row.querySelectorAll("td");
-              if (colIndex >= tdList.length) {
-                throw new Error(`Column index ${colIndex} is out of bounds for row ${rowIndex}.`);
-              }
-      
-              const relevantTd = tdList[colIndex];
-      
-              if (isKeyAttr) {
-                const attrVal = relevantTd.getAttribute(keyAttr);
-                if (attrVal === null) {
-                  throw new Error(`Attribute '${keyAttr}' not found in column ${colIndex}, row ${rowIndex}.`);
+            try {
+                const array = [];
+                let rows = this.#getBody();
+                if (rows.length === 0) {
+                    console.warn("No rows to sort.");
+                    return;
                 }
-      
-                let parsed;
-                if (this.#customParseFunctions[`col_${colIndex}`]) {
-                  try {
-                    parsed = this.#customParseFunctions[`col_${colIndex}`](attrVal);
-                  } catch (parseError) {
-                    throw new Error(`Custom parse function for column ${colIndex} failed: ${parseError.message}`);
-                  }
+
+                const isKeyAttr = typeof key === 'string' && key !== '' && key.startsWith('attr=');
+                let keyAttr = "";
+                if (isKeyAttr) {
+                    keyAttr = key.split('attr=')[1];
+                    if (!keyAttr) {
+                        throw new Error("Empty attribute key provided.");
+                    }
+                }
+
+                let rowIndex = 0;
+                for (const row of rows) {
+                    const index = `index_${rowIndex}`;
+                    row.setAttribute("data-sourtable-row-index", index);
+
+                    const tdList = row.querySelectorAll("td");
+                    if (colIndex >= tdList.length) {
+                        throw new Error(`Column index ${colIndex} is out of bounds for row ${rowIndex}.`);
+                    }
+
+                    const relevantTd = tdList[colIndex];
+
+                    if (isKeyAttr) {
+                        const attrVal = relevantTd.getAttribute(keyAttr);
+                        if (attrVal === null) {
+                            throw new Error(`Attribute '${keyAttr}' not found in column ${colIndex}, row ${rowIndex}.`);
+                        }
+
+                        let parsed;
+                        if (this.#customParseFunctions[`col_${colIndex}`]) {
+                            try {
+                                parsed = this.#customParseFunctions[`col_${colIndex}`](attrVal);
+                            } catch (parseError) {
+                                throw new Error(`Custom parse function for column ${colIndex} failed: ${parseError.message}`);
+                            }
+                        } else {
+                            parsed = this.#parseText(attrVal);
+                        }
+                        array.push([index, parsed]);
+                    } else {
+                        const text = relevantTd.innerText;
+                        let parsed;
+                        if (this.#customParseFunctions[`col_${colIndex}`]) {
+                            try {
+                                parsed = this.#customParseFunctions[`col_${colIndex}`](text);
+                            } catch (parseError) {
+                                throw new Error(`Custom parse function for column ${colIndex} failed: ${parseError.message}`);
+                            }
+                        } else {
+                            parsed = this.#parseText(text);
+                        }
+                        array.push([index, parsed]);
+                    }
+                    rowIndex += 1;
+                }
+
+                if (array.length === 0) {
+                    console.warn("No sortable data collected.");
+                    return;
+                }
+
+                const firstValue = array[0][1];
+                const isString = typeof firstValue === "string";
+
+                if (order === "asc") {
+                    array.sort(function (a, b) {
+                        return isString ? a[1].localeCompare(b[1]) : a[1] - b[1];
+                    });
                 } else {
-                  parsed = this.#parseText(attrVal);
+                    array.sort(function (a, b) {
+                        return isString ? b[1].localeCompare(a[1]) : b[1] - a[1];
+                    });
                 }
-                array.push([index, parsed]);
-              } else {
-                const text = relevantTd.innerText;
-                let parsed;
-                if (this.#customParseFunctions[`col_${colIndex}`]) {
-                  try {
-                    parsed = this.#customParseFunctions[`col_${colIndex}`](text);
-                  } catch (parseError) {
-                    throw new Error(`Custom parse function for column ${colIndex} failed: ${parseError.message}`);
-                  }
-                } else {
-                  parsed = this.#parseText(text);
+
+                const tbody = this.#table.querySelector("tbody") || this.#table;
+                const last_element = tbody.querySelector(`tr[data-sourtable-row-index="${array[array.length - 1][0]}"]`);
+                if (!last_element) {
+                    throw new Error("Could not find last row element in DOM.");
                 }
-                array.push([index, parsed]);
-              }
-              rowIndex += 1;
+                tbody.appendChild(last_element);
+                array.splice(-1);
+
+                for (const [index] of array) {
+
+                    const rowElement = tbody.querySelector(`tr[data-sourtable-row-index="${index}"]`);
+                    if (!rowElement) {
+                        console.warn(`Row with index ${index} not found in DOM.`);
+                        continue;
+                    }
+                    tbody.insertBefore(rowElement, last_element);
+                }
+
+
+                const selector = order === "asc" ? "div.sourtable-arrow-up" : "div.sourtable-arrow-down";
+
+                const target = this.#table.querySelector(`th[data-sourtable-col-index="index_${colIndex}"]`);
+                if (!target) {
+                    throw new Error(`Could not find header for column ${colIndex}.`);
+                }
+                this.#resetIndicatorArrows();
+                target.querySelector(selector).classList.add("filled");
+                const newOrder = order === "asc" ? "desc" : "asc";
+                target.setAttribute("data-sourtable-order", newOrder);
+
+            } catch (error) {
+                console.error(`SourTable.sort failed: ${error.message}`);
+                throw error;
             }
-      
-            if (array.length === 0) {
-              console.warn("No sortable data collected.");
-              return;
-            }
-      
-            const firstValue = array[0][1];
-            const isString = typeof firstValue === "string";
-      
-            if (order === "asc") {
-              array.sort(function (a, b) {
-                return isString ? a[1].localeCompare(b[1]) : a[1] - b[1];
-              });
-            } else {
-              array.sort(function (a, b) {
-                return isString ? b[1].localeCompare(a[1]) : b[1] - a[1];
-              });
-            }
-      
-            const tbody = this.#table.querySelector("tbody") || this.#table;
-            const last_element = tbody.querySelector(`tr[data-sourtable-row-index="${array[array.length - 1][0]}"]`);
-            if (!last_element) {
-              throw new Error("Could not find last row element in DOM.");
-            }
-            tbody.appendChild(last_element);
-            array.splice(-1);
-      
-            for (const [index] of array) {
-      
-              const rowElement = tbody.querySelector(`tr[data-sourtable-row-index="${index}"]`);
-              if (!rowElement) {
-                console.warn(`Row with index ${index} not found in DOM.`);
-                continue;
-              }
-              tbody.insertBefore(rowElement, last_element);
-            }
-      
-      
-            const selector = order === "asc" ? "div.sourtable-arrow-up" : "div.sourtable-arrow-down";
-      
-            const target = this.#table.querySelector(`th[data-sourtable-col-index="index_${colIndex}"]`);
-            if (!target) {
-              throw new Error(`Could not find header for column ${colIndex}.`);
-            }
-            this.#resetIndicatorArrows();
-            target.querySelector(selector).classList.add("filled");
-            const newOrder = order === "asc" ? "desc" : "asc";
-            target.setAttribute("data-sourtable-order", newOrder);
-      
-          } catch (error) {
-            console.error(`SourTable.sort failed: ${error.message}`);
-            throw error;
-          }
         }
         addCustomParseFunction(colIndex, parseFunction) {
-          if (typeof parseFunction !== 'function') {
-            throw new Error("parseFunction must be a function.");
-          }
-          this.#customParseFunctions[`col_${colIndex}`] = parseFunction;
+            if (typeof parseFunction !== 'function') {
+                throw new Error("parseFunction must be a function.");
+            }
+            this.#customParseFunctions[`col_${colIndex}`] = parseFunction;
         }
-      
+
         static get version() {
-          return "1.0.0";
+            return "1.0.0";
         }
-      
+
         // Private methods
         #getHeader() {
-          const header = this.#table.querySelector("tr");
-          if (!header) throw new Error("No header row found.");
-          return header;
+            const header = this.#table.querySelector("tr");
+            if (!header) throw new Error("No header row found.");
+            return header;
         }
-      
+
         #getBody() {
-          if (this.#table.querySelector("thead")) {
-            return Array.from(this.#table.querySelectorAll("tbody tr"));
-          } else {
-            const rows = this.#table.querySelectorAll("tr");
-            return rows.length > 1 ? Array.from(rows).slice(1) : [];
-          }
-        }
-      
-        #resetIndicatorArrows() {
-          const headerRow = this.#getHeader();
-          const headers = headerRow.querySelectorAll("th");
-      
-          headers.forEach((th, index) => {
-            if (this.#excludedColumns.includes(index)) return;
-      
-            let arrowsDiv = th.querySelector(".sourtable-arrow-container");
-            if (!arrowsDiv) {
-              th.classList.add("sourtable-header");
-              th.setAttribute("data-sourtable-col-index", `index_${index}`);
-              arrowsDiv = this.#createElement("div", { class: "sourtable-arrow-container" });
-              th.appendChild(arrowsDiv);
+            if (this.#table.querySelector("thead")) {
+                return Array.from(this.#table.querySelectorAll("tbody tr"));
+            } else {
+                const rows = this.#table.querySelectorAll("tr");
+                return rows.length > 1 ? Array.from(rows).slice(1) : [];
             }
-      
-            arrowsDiv.innerHTML = `<div class=sourtable-arrow-up><svg height=24 viewBox="0 0 24 24"width=24 xmlns=http://www.w3.org/2000/svg><path d="M18.2 13.3L12 7l-6.2 6.3c-.2.2-.3.5-.3.7s.1.5.3.7s.4.3.7.3h11c.3 0 .5-.1.7-.3s.3-.5.3-.7s-.1-.5-.3-.7"/></svg></div><div class=sourtable-arrow-down><svg height=24 viewBox="0 0 24 24"width=24 xmlns=http://www.w3.org/2000/svg><path d="M5.8 9.7L12 16l6.2-6.3c.2-.2.3-.5.3-.7s-.1-.5-.3-.7s-.4-.3-.7-.3h-11c-.3 0-.5.1-.7.3s-.3.4-.3.7s.1.5.3.7"/></svg></div>`;
-            th.setAttribute("data-sourtable-order", "asc");
-          });
         }
-      
-      
-      
-      
+
+        #resetIndicatorArrows() {
+            const headerRow = this.#getHeader();
+            const headers = headerRow.querySelectorAll("th");
+
+            headers.forEach((th, index) => {
+                if (this.#excludedColumns.includes(index)) return;
+
+                let arrowsDiv = th.querySelector(".sourtable-arrow-container");
+                if (!arrowsDiv) {
+                    th.classList.add("sourtable-header");
+                    th.setAttribute("data-sourtable-col-index", `index_${index}`);
+                    arrowsDiv = this.#createElement("div", { class: "sourtable-arrow-container" });
+                    th.appendChild(arrowsDiv);
+                }
+
+                arrowsDiv.innerHTML = `<div class=sourtable-arrow-up><svg height=24 viewBox="0 0 24 24"width=24 xmlns=http://www.w3.org/2000/svg><path d="M18.2 13.3L12 7l-6.2 6.3c-.2.2-.3.5-.3.7s.1.5.3.7s.4.3.7.3h11c.3 0 .5-.1.7-.3s.3-.5.3-.7s-.1-.5-.3-.7"/></svg></div><div class=sourtable-arrow-down><svg height=24 viewBox="0 0 24 24"width=24 xmlns=http://www.w3.org/2000/svg><path d="M5.8 9.7L12 16l6.2-6.3c.2-.2.3-.5.3-.7s-.1-.5-.3-.7s-.4-.3-.7-.3h-11c-.3 0-.5.1-.7.3s-.3.4-.3.7s.1.5.3.7"/></svg></div>`;
+                th.setAttribute("data-sourtable-order", "asc");
+            });
+        }
+
+
+
+
         #addCSS() {
-          if (document.querySelector("style#sourtable-style")) return;
-      
-          const style = this.#createElement("style", { id: "sourtable-style" });
-          style.textContent = `.sourtable-arrow-container{display:inline-flex;flex-direction:column;margin-left:.3em;vertical-align:middle;height:1em;width:.8em;justify-content:space-between}.sourtable-arrow-down,.sourtable-arrow-up{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}.sourtable-arrow-down svg,.sourtable-arrow-up svg{width:100%;height:100%;fill:currentColor;opacity:.3;max-height:.5em}.sourtable-arrow-down.filled svg,.sourtable-arrow-up.filled svg{opacity:1!important}.sourtable-header{cursor:pointer!important}`;
-          document.head.appendChild(style);
+            if (document.querySelector("style#sourtable-style")) return;
+
+            const style = this.#createElement("style", { id: "sourtable-style" });
+            style.textContent = `.sourtable-arrow-container{display:inline-flex;flex-direction:column;margin-left:.3em;vertical-align:middle;height:1em;width:.8em;justify-content:space-between}.sourtable-arrow-down,.sourtable-arrow-up{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}.sourtable-arrow-down svg,.sourtable-arrow-up svg{width:100%;height:100%;fill:currentColor;opacity:.3;max-height:.5em}.sourtable-arrow-down.filled svg,.sourtable-arrow-up.filled svg{opacity:1!important}.sourtable-header{cursor:pointer!important}`;
+            document.head.appendChild(style);
         }
-      
+
         #parseText(text) {
-          if (typeof text !== 'string') return text;
-          const stripped = text.replace(/[$,£]/g, "").replace(/\s/g, '');
-          const float = parseFloat(stripped.endsWith(".") ? stripped.slice(0, -1) : stripped);
-          return isNaN(float) ? text : float;
+            if (typeof text !== 'string') return text;
+            const stripped = text.replace(/[$,£]/g, "").replace(/\s/g, '');
+            const float = parseFloat(stripped.endsWith(".") ? stripped.slice(0, -1) : stripped);
+            return isNaN(float) ? text : float;
         }
-      
+
         #createElement(nodeType, attributes = {}) {
-          const element = document.createElement(nodeType);
-          Object.entries(attributes).forEach(([key, value]) => {
-            element.setAttribute(key, value);
-          });
-          return element;
+            const element = document.createElement(nodeType);
+            Object.entries(attributes).forEach(([key, value]) => {
+                element.setAttribute(key, value);
+            });
+            return element;
         }
         isEngaged() {
-          return this.#isEngaged;
+            return this.#isEngaged;
         }
-      }
+    }
     ///////////////////
 })();
